@@ -12,14 +12,14 @@ interface ButtonProps {
     iconColor?: string; // Add icon color prop
 }
 
-const CustomButton: React.FC<ButtonProps> = ({ title, onPress, backgroundColor = '#007BFF', color = '#FFFFFF', style, icon, iconColor = '#FFFFFF' }) => {
+const CustomButton: React.FC<ButtonProps> = ({ title, onPress, backgroundColor = '#95ff77', color = '#2a2e2e', style, icon, iconColor = '#2a2e2e' }) => {
     return (
         <TouchableOpacity
             style={[styles.button, { backgroundColor }, style]}
             onPress={onPress}
         >
             <View style={styles.content}>
-                {icon && <Icon name={icon} color={iconColor} style={styles.icon} />} {/* Render icon if provided */}
+                {icon && <Icon name={icon} color={iconColor} style={styles.icon} />} 
                 <Text style={[styles.text, { color }]}>{title}</Text>
             </View>
         </TouchableOpacity>
@@ -28,18 +28,13 @@ const CustomButton: React.FC<ButtonProps> = ({ title, onPress, backgroundColor =
 
 const styles = StyleSheet.create({
     button: {
-        borderColor: '#ccc',
+        width: 350,
         padding: 16,
-        borderRadius: 16,
-        width: '90%',
-        marginBottom: 16,
-        backgroundColor: '#fff',
+        borderRadius: 32,
+        margin: 16,
         textAlign: 'center',
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.8,
-        shadowRadius: 2,
-        elevation: 5,
         alignItems: 'center',
         justifyContent: 'center',
     },
@@ -51,6 +46,7 @@ const styles = StyleSheet.create({
         marginRight: 8,
     },
     text: {
+        fontFamily: 'SpaceMono',
         fontSize: 16,
     },
 });
