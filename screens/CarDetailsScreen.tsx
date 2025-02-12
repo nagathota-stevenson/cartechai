@@ -115,7 +115,7 @@ export default function CarDetailsScreen() {
         <Text style={styles.subtitle}>Details for VIN: {vin}</Text>
 
         {loading ? (
-          <ActivityIndicator size="large" color="#0000ff" />
+          <ActivityIndicator size="large" color="#95ff77" />
         ) : error ? (
           <Text style={styles.errorText}>{error}</Text>
         ) : carDetails ? (
@@ -202,14 +202,14 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 32,
-    fontFamily: 'SpaceMono',
+    fontFamily: 'WorkSans',
     marginBottom: 12,
     textAlign: 'center',
     color: '#fff',
   },
   subtitle: {
     fontSize: 16,
-    fontFamily: 'SpaceMono',
+    fontFamily: 'WorkSans',
     color: '#555D58',
     textAlign: 'center',
     marginBottom: 20,
@@ -224,13 +224,13 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   label: {
-    fontFamily: 'SpaceMono',
+    fontFamily: 'WorkSans',
     fontSize: 16,
     color: '#fff',
-    fontWeight: 'bold',
+   
   },
   value: {
-    fontFamily: 'SpaceMono',
+    fontFamily: 'WorkSans',
     fontSize: 16,
     color: '#95ff77',
     flex: 1,

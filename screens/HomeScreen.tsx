@@ -16,8 +16,8 @@ export default function HomeScreen() {
     navigation.navigate('CarDetails', { vin });
   };
 
-  const handleScanVin = () => { 
-
+  const handleEnterCarDetails = () => { 
+    navigation.navigate('EnterCarDetails');
   }
 
   return (
@@ -41,7 +41,7 @@ export default function HomeScreen() {
             onChangeText={setVin}
           />
            <Text style={styles.subtitle}>OR</Text>
-           <CustomButton title="Enter Details Manually" icon="edit-note" backgroundColor='#ffffff' color='#1a1c1b' iconColor='#1a1c1b' onPress={handleScanVin} />
+           <CustomButton title="Enter Details Manually" icon="edit-note" backgroundColor='#ffffff' color='#1a1c1b' iconColor='#1a1c1b' onPress={handleEnterCarDetails} />
           <CustomButton title="Look Up" icon="search" onPress={handleVinSubmission} />
         </ScrollView>
       </View>
@@ -51,7 +51,7 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    fontFamily: 'SpaceMono',
+    fontFamily: 'WorkSans',
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
@@ -71,19 +71,19 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 32,
-    fontFamily: 'SpaceMono',
+    fontFamily: 'WorkSans',
     marginBottom: 8,
     textAlign: 'center',
     color: '#fff',
   },
   subtitle: {
-    fontFamily: 'SpaceMono',
+    fontFamily: 'WorkSans',
     fontSize: 16,
     color: '#555D58',
     textAlign: 'center',
   },
   input: {
-    fontFamily: 'SpaceMono',
+    fontFamily: 'WorkSans',
     padding: 16,
     fontSize: 16,
     borderRadius: 32,

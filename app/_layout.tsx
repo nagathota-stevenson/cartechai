@@ -6,6 +6,7 @@ import { createStackNavigator } from '@react-navigation/stack';  // Import creat
 import HomeScreen from '../screens/HomeScreen';  // Import your HomeScreen
 import CarDetailsScreen from '../screens/CarDetailsScreen';  // Import the CarDetailsScreen
 import ChatScreen from '@/screens/ChatScreen';
+import EnterCarDetailsScreen from '@/screens/EnterCarDetails';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -53,6 +54,10 @@ export default function Layout() {
       <Stack.Screen 
         name="ChatScreen" 
         component={ChatScreen} 
+      />
+       <Stack.Screen 
+        name="EnterCarDetails" 
+        component={EnterCarDetailsScreen} 
       />
       </Stack.Navigator>
     </NavigationIndependentTree>

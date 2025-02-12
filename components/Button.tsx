@@ -46,7 +46,7 @@ const styles = StyleSheet.create({
         marginRight: 8,
     },
     text: {
-        fontFamily: 'SpaceMono',
+        fontFamily: 'WorkSans',
         fontSize: 16,
     },
 });
