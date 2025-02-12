@@ -89,6 +89,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   input: {
+    fontSize: 16,
     backgroundColor: '#222',
     color: '#fff',
     padding: 16,

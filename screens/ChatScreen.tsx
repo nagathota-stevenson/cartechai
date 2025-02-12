@@ -25,7 +25,7 @@ const ChatScreen = () => {
   const [messages, setMessages] = useState([
     {
       id: "1",
-      text: `Hello! I am CarTechAI. How can I assist you with your car: ${carDetails?.make}, Model: ${carDetails?.model}, Year: ${carDetails?.modelYear}?`,
+      text: `Hello! I am CarTechAI. How can I assist you with your car: ${carDetails?.make} ${carDetails?.model} - ${carDetails?.modelYear}?`,
       sender: "bot",
     },
   ]);
@@ -65,17 +65,17 @@ const ChatScreen = () => {
             messages: [
               {
                 role: "system",
-                content: `You are an AI mechanic. The car details are: ${JSON.stringify(carDetails)}.`,
+                content: `You are CarTechAI, an AI mechanic. The car details provided are: ${JSON.stringify(carDetails)}. Please verify the accuracy of the details and ensure everything is correct. If there are discrepancies, notify the user immediately. Additionally, provide relevant YouTube video links (this is the most important feature) for troubleshooting, maintenance, or related car issues, along with any images, if applicable.`,
               },
               { role: "user", content: inputText },
             ],
-            max_tokens: 150,
+            
           }),
         });
 
         const data = await response.json();
         const aiResponse = data.choices?.[0]?.message?.content.trim() || "Sorry, I could not understand that.";
-
+        console.log("AI Response:", aiResponse); // Debugging: Log the AI response
         setMessages((prevMessages) => [
           ...prevMessages.filter((message) => message.id !== "typing"), 
           { id: Date.now().toString(), text: aiResponse, sender: "bot" },
@@ -106,6 +106,7 @@ const ChatScreen = () => {
   }, [messages]); // Dependency array ensures it runs when messages change
 
   const handleLinkPress = (url) => {
+    console.log("Opening URL:", url); 
     Linking.openURL(url).catch((err) => console.error("Failed to open URL:", err));
   };
 
@@ -122,31 +123,41 @@ const ChatScreen = () => {
 
   const renderItem = ({ item }) => {
     const urlPattern = /(https?:\/\/[^\s]+)/g;
-
-    const textWithLinks = item.text.split(urlPattern).map((part, index) => {
+    const boldPattern = /(\*\*\*[^\*]+\*\*\*)/g; // Matches ***bold***
+  
+    const textWithLinksAndBold = item.text.split(urlPattern).map((part, index) => {
       if (part.match(urlPattern)) {
         const youtubeThumbnail = getYoutubeThumbnail(part);
         return (
-          <View key={index} style={styles.linkContainer}>
-            <Text style={styles.link} onPress={() => handleLinkPress(part)}>
-              {part}
-            </Text>
+          <TouchableOpacity key={index} style={styles.linkContainer} onPress={() => handleLinkPress(part)}>
+            <TouchableOpacity>
+              <Text style={styles.link}>
+                {part}
+              </Text>
+            </TouchableOpacity>
             {youtubeThumbnail && (
               <Image source={{ uri: youtubeThumbnail }} style={styles.youtubeThumbnail} />
             )}
-          </View>
+          </TouchableOpacity>
+        );
+      } else if (part.match(boldPattern)) {
+        const boldText = part.replace(/\*\*\*/g, ""); // Remove the ***
+        return (
+          <Text key={index} style={[styles.messageText, styles.boldText]}>
+            {boldText}
+          </Text>
         );
       }
-      return <Text key={index}>{part}</Text>;
+      return <Text key={index} style={styles.messageText}>{part}</Text>;
     });
-
+  
     return (
       <View style={[styles.messageContainer, item.sender === "user" ? styles.userMessage : styles.botMessage]}>
-        <Text style={styles.messageText}>{textWithLinks}</Text>
+        <Text style={styles.messageText}>{textWithLinksAndBold}</Text>
       </View>
     );
   };
-
+  
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "height"}>
       <View style={styles.container}>
@@ -201,7 +212,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingTop: 50,
-    paddingHorizontal: 10,
+    paddingHorizontal: 20,
     paddingBottom: 15,
     backgroundColor: "#0f0f0f",
     alignItems: "center",
@@ -214,7 +225,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   chatBox: {
-    flex: 1,
+    flexGrow: 1,
     width: "100%",
   },
   messageContainer: {
@@ -238,6 +249,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#2a2e2e",
   },
+  boldText:{
+    fontFamily: 'WorkSans',
+    fontSize: 16,
+  },
   typingText: {
     fontFamily: 'WorkSans',
     fontSize: 16,
@@ -255,8 +270,11 @@ const styles = StyleSheet.create({
     marginVertical: 5,
   },
   link: {
-    color: "#0066cc",
-    textDecorationLine: "underline",
+    zIndex: 100,
+    fontFamily: 'WorkSans',
+    fontSize: 16,
+    color: "#0066cc", // Blue color for links
+    textDecorationLine: "underline", // Underline for links
   },
   youtubeThumbnail: {
     width: 200,
@@ -271,6 +289,7 @@ const styles = StyleSheet.create({
     borderColor: "#444",
     width: "100%",
     backgroundColor: "#0f0f0f",
+    position: "relative",
   },
   input: {
     flex: 1,
@@ -283,6 +302,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#222",
     fontFamily: 'WorkSans',
     fontSize: 16,
+    
   },
   sendButton: {
     marginLeft: -50,

@@ -237,13 +237,13 @@ const styles = StyleSheet.create({
     textAlign: 'right',
   },
   errorText: {
-    fontSize: 18,
+    fontSize: 16,
     color: 'red',
     textAlign: 'center',
     marginVertical: 20,
   },
   noDataText: {
-    fontSize: 18,
+    fontSize: 16,
     color: '#fff',
     textAlign: 'center',
     marginTop: 20,

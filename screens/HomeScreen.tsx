@@ -36,6 +36,7 @@ export default function HomeScreen() {
           <TextInput
             style={styles.input}
             placeholder="Enter VIN (e.g., 1HGCM82633A123456)"
+            placeholderTextColor={'#ddd'}
             value={vin}
             maxLength={17}
             onChangeText={setVin}
@@ -67,7 +68,6 @@ const styles = StyleSheet.create({
   animation: {
     width: 200,
     height: 200,
-    marginBottom: 20,  // Adjust the margin for better spacing
   },
   title: {
     fontSize: 32,
