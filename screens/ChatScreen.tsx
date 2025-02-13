@@ -152,8 +152,7 @@ const ChatScreen = () => {
           console.warn("⚠ No YouTube video found for this query.");
         }
 
-        // Store the message properly
-        const typeWriterEffect = (text, callback) => {
+        const typeWriterEffect = (text, callback, completeCallback) => {
           let index = 0;
           let typedText = "";
         
@@ -164,8 +163,9 @@ const ChatScreen = () => {
               callback(typedText);
             } else {
               clearInterval(interval);
+              if (completeCallback) completeCallback(); // Ensure images and video data are added after typing
             }
-          }, 10); 
+          }, 10); // Typing speed
         };
         
         setMessages((prevMessages) => [
@@ -174,18 +174,34 @@ const ChatScreen = () => {
             id: Date.now().toString(),
             text: "",
             sender: "bot",
+            images: [], // Placeholder
+            youtubeVideo: null, // Placeholder
           },
         ]);
         
-        typeWriterEffect(aiResponse, (updatedText) => {
-          setMessages((prevMessages) =>
-            prevMessages.map((msg, idx) =>
-              idx === prevMessages.length - 1
-                ? { ...msg, text: updatedText }
-                : msg
-            )
-          );
-        });
+        typeWriterEffect(
+          aiResponse,
+          (updatedText) => {
+            setMessages((prevMessages) =>
+              prevMessages.map((msg, idx) =>
+                idx === prevMessages.length - 1
+                  ? { ...msg, text: updatedText }
+                  : msg
+              )
+            );
+          },
+          () => {
+            // Once typing is done, update message with images & video
+            setMessages((prevMessages) =>
+              prevMessages.map((msg, idx) =>
+                idx === prevMessages.length - 1
+                  ? { ...msg, images, youtubeVideo }
+                  : msg
+              )
+            );
+          }
+        );
+        
         
       } catch (error) {
         setMessages((prevMessages) => [
@@ -435,7 +451,6 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: "48%",
     left: "45%",
-
     transform: [{ translateX: -15 }, { translateY: -15 }],
     backgroundColor: "#FF0000",
     width: 50,
@@ -525,6 +540,8 @@ const styles = StyleSheet.create({
     alignSelf: "flex-start",
     height: 60,
     borderColor: "#444",
+    marginBottom: 5,
+    marginTop  : 10,
     width: "100%",
     backgroundColor: "#0f0f0f",
     position: "relative",

@@ -24,8 +24,8 @@ export default function HomeScreen() {
 
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-      <View style={styles.container}>
-        <ScrollView contentContainerStyle={styles.scrollContainer}  horizontal={false}>
+      <View style={[styles.container]}>
+        <ScrollView contentContainerStyle={styles.scrollContainer}  >
           {/* Lottie Animation */}
           <LottieView
             source={require('../assets/animations/ai.json')}  // Make sure the file path is correct
@@ -34,7 +34,9 @@ export default function HomeScreen() {
             style={styles.animation}
           />
           <Text style={styles.title}>CarTechAI</Text>
-          <Text style={styles.subtitle}>Please Enter Your VIN to Get Started</Text>
+          <Text style={styles.subtitle}>Please Enter Car Details or VIN</Text>
+          <CustomButton title="Enter Details Manually" icon="edit-note" backgroundColor='#ffffff' color='#1a1c1b' iconColor='#1a1c1b' onPress={handleEnterCarDetails} />
+          <Text style={styles.subtitle}>OR</Text>
           <TextInput
             style={[styles.input, { width: useWindowDimensions().width * 0.9 }]}
             placeholder="Enter VIN (e.g., 1HGCM82633A123456)"
@@ -43,8 +45,7 @@ export default function HomeScreen() {
             maxLength={17}
             onChangeText={setVin}
           />
-           <Text style={styles.subtitle}>OR</Text>
-           <CustomButton title="Enter Details Manually" icon="edit-note" backgroundColor='#ffffff' color='#1a1c1b' iconColor='#1a1c1b' onPress={handleEnterCarDetails} />
+          
            <CustomButton title="Look Up" icon="search" onPress={handleVinSubmission} />
         </ScrollView>
       </View>
@@ -54,13 +55,13 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   container: {
+    width: '100%',
     fontFamily: 'WorkSans',
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#0f0f0f',
-    padding: 16,
-    width: '100%',
+   
   },
   scrollContainer: {
     flexGrow: 1,
