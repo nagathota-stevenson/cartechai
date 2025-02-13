@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, Alert } from 'react-native';
+import { View, Text, TextInput, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, Alert, useWindowDimensions } from 'react-native';
 import CustomButton from '@/components/Button';
 import { useNavigation } from '@react-navigation/native';
 
 export default function EnterCarDetailsScreen() {
   const navigation = useNavigation();
+  const width =useWindowDimensions().width * 0.9;
   const [carDetails, setCarDetails] = useState({
     make: '',
     model: '',
@@ -45,7 +46,7 @@ export default function EnterCarDetailsScreen() {
         {Object.keys(carDetails).map((key) => (
         <TextInput
           key={key}
-          style={styles.input}
+          style={[styles.input, { width: width }]}
           placeholder={key.replace(/([A-Z])/g, ' $1').trim().replace(/\b\w/g, (char) => char.toUpperCase())} 
           placeholderTextColor="#aaa"
           value={carDetails[key]}
@@ -70,8 +71,12 @@ const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
     padding: 20,
+    height  : '100%',
     justifyContent: 'center',
     backgroundColor: '#0f0f0f',
+  },
+  chatButton:{
+    alignSelf: 'center',
   },
   subtitle: {
     fontFamily: 'WorkSans',
@@ -89,6 +94,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   input: {
+    alignSelf: 'center',
     fontSize: 16,
     backgroundColor: '#222',
     color: '#fff',
@@ -96,10 +102,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     borderRadius: 32,
   },
-  chatButton: {
-    marginTop: 20,
-    marginBottom: 200,
-  },
+ 
 });
 
 

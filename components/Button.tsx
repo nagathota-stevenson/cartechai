@@ -1,5 +1,5 @@
 import React from 'react';
-import { TouchableOpacity, Text, StyleSheet, GestureResponderEvent, View } from 'react-native';
+import { TouchableOpacity, Text, StyleSheet, GestureResponderEvent, View, useWindowDimensions } from 'react-native';
 import { Icon } from 'react-native-elements'; // Assuming you're using react-native-elements for icons
 
 interface ButtonProps {
@@ -13,9 +13,10 @@ interface ButtonProps {
 }
 
 const CustomButton: React.FC<ButtonProps> = ({ title, onPress, backgroundColor = '#95ff77', color = '#2a2e2e', style, icon, iconColor = '#2a2e2e' }) => {
+    const { width } = useWindowDimensions();
     return (
         <TouchableOpacity
-            style={[styles.button, { backgroundColor }, style]}
+            style={[styles.button, { backgroundColor, width: width * 0.9 }, style]} // Adjust width here
             onPress={onPress}
         >
             <View style={styles.content}>
@@ -28,7 +29,7 @@ const CustomButton: React.FC<ButtonProps> = ({ title, onPress, backgroundColor =
 
 const styles = StyleSheet.create({
     button: {
-        width: 350,
+        width: '100%',
         padding: 16,
         borderRadius: 32,
         margin: 16,

@@ -18,8 +18,9 @@ import LottieView from "lottie-react-native";
 const OPENAI_API_KEY =
   "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";
 
-const SERPAPI_KEY = "2c464ccd6bf9d342cd364f66bf1c68c87f2053a15f7e4e36cb1fa3af0c36af77";
-  
+const SERPAPI_KEY =
+  "2c464ccd6bf9d342cd364f66bf1c68c87f2053a15f7e4e36cb1fa3af0c36af77";
+
 const ChatScreen = () => {
   const navigation = useNavigation();
   const flatListRef = useRef(null); // Reference to FlatList
@@ -36,49 +37,51 @@ const ChatScreen = () => {
   const [inputText, setInputText] = useState("");
   const [isTyping, setIsTyping] = useState(false);
 
-
   const fetchYoutubeVideosFromSerpAPI = async (query) => {
     try {
-      const searchQuery = [query, carDetails?.make, carDetails?.model, carDetails?.modelYear]
+      const searchQuery = [
+        query,
+        carDetails?.make,
+        carDetails?.model,
+        carDetails?.modelYear,
+      ]
         .filter(Boolean)
         .join(" ");
-  
+
       const url = `https://serpapi.com/search.json?engine=youtube&search_query=${encodeURIComponent(
         searchQuery
       )}&gl=us&hl=en&api_key=${SERPAPI_KEY}`;
-  
-      
-  
+
       const response = await fetch(url);
       const data = await response.json();
-    
-  
+
       if (data.video_results && data.video_results.length > 0) {
         return data.video_results.slice(0, 1).map((video) => ({
           title: video.title,
           link: video.link + "&pp=ygU%3D",
-          thumbnail: video.thumbnail?.static || `https://img.youtube.com/vi/${video.link.split("v=")[1]}/hqdefault.jpg`, // Always use static image
+          thumbnail:
+            video.thumbnail?.static ||
+            `https://img.youtube.com/vi/${
+              video.link.split("v=")[1]
+            }/hqdefault.jpg`, // Always use static image
         }))[0];
       }
-    } catch (error) {
-     
-    }
+    } catch (error) {}
     return null;
   };
-  
-  
+
   const fetchImagesFromSerpAPI = async (query) => {
     try {
       const response = await fetch(
-        `https://serpapi.com/search.json?q=${encodeURIComponent(query)}&location=United+States&hl=en&gl=us&google_domain=google.com&tbm=isch&api_key=${SERPAPI_KEY}`
+        `https://serpapi.com/search.json?q=${encodeURIComponent(
+          query
+        )}&location=United+States&hl=en&gl=us&google_domain=google.com&tbm=isch&api_key=${SERPAPI_KEY}`
       );
       const data = await response.json();
       if (data.images_results && data.images_results.length > 0) {
-        return data.images_results.slice(0, 3).map(img => img.original);
+        return data.images_results.slice(0, 3).map((img) => img.original);
       }
-    } catch (error) {
-     
-    }
+    } catch (error) {}
     return [];
   };
 
@@ -86,81 +89,119 @@ const ChatScreen = () => {
 
   const handleSend = async () => {
     if (!inputText.trim()) return;
-  
-   
-  
-    const newMessage = { id: Date.now().toString(), text: inputText, sender: "user" };
+
+    const newMessage = {
+      id: Date.now().toString(),
+      text: inputText,
+      sender: "user",
+    };
     setMessages([...messages, newMessage]);
     setInputText("");
     setIsTyping(true);
-  
-    const typingMessage = { id: "typing", text: "CarTechAI is typing...", sender: "bot" };
+
+    const typingMessage = {
+      id: "typing",
+      text: "CarTechAI is typing...",
+      sender: "bot",
+    };
     setMessages((prevMessages) => [...prevMessages, typingMessage]);
-  
+
     setTimeout(async () => {
       try {
         // Fetch AI response (TEXT ONLY)
-        const response = await fetch("https://api.openai.com/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${OPENAI_API_KEY}`,
-          },
-          body: JSON.stringify({
-            model: "gpt-4",
-            messages: [
-              {
-                role: "system",
-                content: `You are CarTechAI, an AI mechanic. The car details provided are: ${JSON.stringify(
-                  carDetails
-                )}. Respond with text only. Only Respond to AutoMobile related queries.`,
-              },
-              { role: "user", content: inputText },
-            ],
-          }),
-        });
-  
+        const response = await fetch(
+          "https://api.openai.com/v1/chat/completions",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${OPENAI_API_KEY}`,
+            },
+            body: JSON.stringify({
+              model: "gpt-4",
+              messages: [
+                {
+                  role: "system",
+                  content: `You are CarTechAI, an AI mechanic. The car details provided are: ${JSON.stringify(
+                    carDetails
+                  )}. Respond with text only. Only Respond to AutoMobile related queries.`,
+                },
+                { role: "user", content: inputText },
+              ],
+            }),
+          }
+        );
+
         const data = await response.json();
         const aiResponse =
-          (data.choices?.[0]?.message?.content.trim() + "\n\n🔽 **For images and videos, see below.** 🔽") ||
+          data.choices?.[0]?.message?.content.trim() +
+            "\n\n🔽 **For images and videos, see below.** 🔽" ||
           "Sorry, I could not understand that.\n\n🔽 **For images and videos, see below.** 🔽";
-  
-      
-  
+
         // Fetch images
-        const images = await fetchImagesFromSerpAPI(`${inputText} ${carDetails?.make} ${carDetails?.model} ${carDetails?.modelYear} official diagrams`);
-  
+        const images = await fetchImagesFromSerpAPI(
+          `${inputText} ${carDetails?.make} ${carDetails?.model} ${carDetails?.modelYear} official diagrams`
+        );
+
         // Fetch YouTube video
-        const youtubeVideo = await fetchYoutubeVideosFromSerpAPI(`${inputText} ${carDetails?.make} ${carDetails?.model} ${carDetails?.modelYear} tutorial`);
-  
+        const youtubeVideo = await fetchYoutubeVideosFromSerpAPI(
+          `${inputText} ${carDetails?.make} ${carDetails?.model} ${carDetails?.modelYear} tutorial`
+        );
 
         if (!youtubeVideo) {
           console.warn("⚠ No YouTube video found for this query.");
         }
-  
+
         // Store the message properly
+        const typeWriterEffect = (text, callback) => {
+          let index = 0;
+          let typedText = "";
+        
+          const interval = setInterval(() => {
+            if (index < text.length) {
+              typedText += text.charAt(index);
+              index++;
+              callback(typedText);
+            } else {
+              clearInterval(interval);
+            }
+          }, 10); 
+        };
+        
         setMessages((prevMessages) => [
-  ...prevMessages.filter((message) => message.id !== "typing"),
-  {
-    id: Date.now().toString(),
-    text: aiResponse,
-    sender: "bot",
-    images,
-    youtubeVideo,
-  },
-]);
+          ...prevMessages.filter((message) => message.id !== "typing"),
+          {
+            id: Date.now().toString(),
+            text: "",
+            sender: "bot",
+          },
+        ]);
+        
+        typeWriterEffect(aiResponse, (updatedText) => {
+          setMessages((prevMessages) =>
+            prevMessages.map((msg, idx) =>
+              idx === prevMessages.length - 1
+                ? { ...msg, text: updatedText }
+                : msg
+            )
+          );
+        });
+        
       } catch (error) {
         setMessages((prevMessages) => [
           ...prevMessages.filter((message) => message.id !== "typing"),
-          { id: Date.now().toString(), text: "Error: Unable to get a response.", sender: "bot" },
+          {
+            id: Date.now().toString(),
+            text: "Error: Unable to get a response.",
+            sender: "bot",
+          },
         ]);
       } finally {
         setIsTyping(false);
       }
     }, 200);
   };
-  
-  
+
   useEffect(() => {
     if (flatListRef.current) {
       // Use a small timeout to ensure the FlatList is fully updated
@@ -172,31 +213,47 @@ const ChatScreen = () => {
 
   const renderItem = ({ item }) => {
     const urlPattern = /(https?:\/\/[^\s]+)/g;
-    const imagePattern = /(https?:\/\/[^\s)]+?\.(?:png|jpg|jpeg|gif))(?=[\s)]|$)/i;
+    const imagePattern =
+      /(https?:\/\/[^\s)]+?\.(?:png|jpg|jpeg|gif))(?=[\s)]|$)/i;
     const pdfPattern = /(https?:\/\/[^\s)]+?\.pdf)(?=[\s)]|$)/i;
     const boldPattern = /\*\*(.*?)\*\*/g;
     const emojiPattern = /(\p{Emoji_Presentation}|\p{Extended_Pictographic})/gu;
-    
+
     const textWithMedia = item.text.split(urlPattern).map((part, index) => {
       if (imagePattern.test(part)) {
         const match = part.match(imagePattern);
         if (match) {
           const cleanImageUrl = match[1];
           return (
-            <TouchableOpacity key={index} onPress={() => Linking.openURL(cleanImageUrl)}>
-              <Image source={{ uri: cleanImageUrl }} style={styles.chatImage} resizeMode="contain" />
+            <TouchableOpacity
+              key={index}
+              onPress={() => Linking.openURL(cleanImageUrl)}
+            >
+              <Image
+                source={{ uri: cleanImageUrl }}
+                style={styles.chatImage}
+                resizeMode="contain"
+              />
             </TouchableOpacity>
           );
         }
       } else if (pdfPattern.test(part)) {
         return (
-          <TouchableOpacity key={index} style={styles.linkContainer} onPress={() => Linking.openURL(part)}>
+          <TouchableOpacity
+            key={index}
+            style={styles.linkContainer}
+            onPress={() => Linking.openURL(part)}
+          >
             <Text style={[styles.link, styles.boldText]}>📄 Open PDF</Text>
           </TouchableOpacity>
         );
       } else if (urlPattern.test(part)) {
         return (
-          <TouchableOpacity key={index} style={styles.linkContainer} onPress={() => Linking.openURL(part)}>
+          <TouchableOpacity
+            key={index}
+            style={styles.linkContainer}
+            onPress={() => Linking.openURL(part)}
+          >
             <Text style={styles.link}>{part}</Text>
           </TouchableOpacity>
         );
@@ -214,14 +271,14 @@ const ChatScreen = () => {
           </Text>
         );
       }
-  
+
       return (
         <Text key={index} style={styles.messageText}>
           {part}
         </Text>
       );
     });
-  
+
     return (
       <View
         style={[
@@ -231,17 +288,25 @@ const ChatScreen = () => {
       >
         {textWithMedia}
 
-         {/* Display YouTube video with clickable link and thumbnail */}
-         {item.youtubeVideo && (
+        {/* Display YouTube video with clickable link and thumbnail */}
+        {item.youtubeVideo && (
           <View style={styles.youtubeContainer}>
             {/* Clickable YouTube Link */}
-            <TouchableOpacity onPress={() => Linking.openURL(item.youtubeVideo.link)}>
+            <TouchableOpacity
+              onPress={() => Linking.openURL(item.youtubeVideo.link)}
+            >
               <Text style={styles.link}>▶ {item.youtubeVideo.title}</Text>
             </TouchableOpacity>
-  
+
             {/* Clickable YouTube Thumbnail */}
-            <TouchableOpacity onPress={() => Linking.openURL(item.youtubeVideo.link)} style={styles.youtubeThumbnailContainer}>
-              <Image source={{ uri: item.youtubeVideo.thumbnail }} style={styles.youtubeThumbnail} />
+            <TouchableOpacity
+              onPress={() => Linking.openURL(item.youtubeVideo.link)}
+              style={styles.youtubeThumbnailContainer}
+            >
+              <Image
+                source={{ uri: item.youtubeVideo.thumbnail }}
+                style={styles.youtubeThumbnail}
+              />
               {/* Play Button Overlay */}
               <View style={styles.youtubePlayButton}>
                 <Text style={styles.playButtonText}>▶</Text>
@@ -249,24 +314,24 @@ const ChatScreen = () => {
             </TouchableOpacity>
           </View>
         )}
-  
+
         {/* Display images from SerpAPI */}
         {item.images?.length > 0 && (
           <View style={styles.imageContainer}>
             {item.images.map((img, index) => (
-              <TouchableOpacity key={index} onPress={() => Linking.openURL(img)}>
+              <TouchableOpacity
+                key={index}
+                onPress={() => Linking.openURL(img)}
+              >
                 <Image source={{ uri: img }} style={styles.chatImage} />
               </TouchableOpacity>
             ))}
           </View>
         )}
-  
-       
       </View>
     );
   };
-  
-  
+
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
@@ -330,16 +395,16 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   chatImage: {
-    width: "100%",  
-    maxWidth: 300, 
-    height: undefined, 
-    aspectRatio: 16 / 9,  
+    width: "100%",
+    maxWidth: 300,
+    height: undefined,
+    aspectRatio: 16 / 9,
     borderRadius: 10,
     marginTop: 5,
     alignSelf: "flex-start",
-    resizeMode: "contain",  
+    resizeMode: "contain",
   },
-  
+
   logo: {
     flexDirection: "row",
     alignItems: "center",
@@ -370,7 +435,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: "48%",
     left: "45%",
-    
+
     transform: [{ translateX: -15 }, { translateY: -15 }],
     backgroundColor: "#FF0000",
     width: 50,

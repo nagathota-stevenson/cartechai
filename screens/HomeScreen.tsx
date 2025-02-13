@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, Alert, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { View, Text, TextInput, StyleSheet, Alert, KeyboardAvoidingView, Platform, ScrollView, useWindowDimensions } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import LottieView from 'lottie-react-native';  // Import Lottie
 import CustomButton from '@/components/Button';
@@ -7,6 +7,8 @@ import CustomButton from '@/components/Button';
 export default function HomeScreen() {
   const [vin, setVin] = useState('');
   const navigation = useNavigation();
+
+  
 
   const handleVinSubmission = () => {
     if (!vin.trim()) {
@@ -34,7 +36,7 @@ export default function HomeScreen() {
           <Text style={styles.title}>CarTechAI</Text>
           <Text style={styles.subtitle}>Please Enter Your VIN to Get Started</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, { width: useWindowDimensions().width * 0.9 }]}
             placeholder="Enter VIN (e.g., 1HGCM82633A123456)"
             placeholderTextColor={'#ddd'}
             value={vin}
@@ -43,7 +45,7 @@ export default function HomeScreen() {
           />
            <Text style={styles.subtitle}>OR</Text>
            <CustomButton title="Enter Details Manually" icon="edit-note" backgroundColor='#ffffff' color='#1a1c1b' iconColor='#1a1c1b' onPress={handleEnterCarDetails} />
-          <CustomButton title="Look Up" icon="search" onPress={handleVinSubmission} />
+           <CustomButton title="Look Up" icon="search" onPress={handleVinSubmission} />
         </ScrollView>
       </View>
     </KeyboardAvoidingView>
@@ -58,6 +60,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#0f0f0f',
     padding: 16,
+    width: '100%',
   },
   scrollContainer: {
     flexGrow: 1,
@@ -88,7 +91,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     borderRadius: 32,
     marginTop: 16,
-    width: 350,
     marginBottom: 8,
     backgroundColor: '#fff',
     textAlign: 'center',
