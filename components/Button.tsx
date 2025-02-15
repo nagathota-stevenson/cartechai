@@ -9,9 +9,9 @@ interface ButtonProps {
     color?: string;
     style?: object;
     icon?: string;
+    width?: number;
     iconColor?: string;
 }
-
 const CustomButton: React.FC<ButtonProps> = ({ 
     title, 
     onPress, 
@@ -19,15 +19,16 @@ const CustomButton: React.FC<ButtonProps> = ({
     color = '#2a2e2e', 
     style, 
     icon, 
-    iconColor = '#2a2e2e' 
+    iconColor = '#2a2e2e',
+    width
 }) => {
-    const { width } = useWindowDimensions();
+    const { width: windowWidth } = useWindowDimensions();
     
     return (
         <TouchableOpacity
             style={[
                 styles.button, 
-                { backgroundColor, width: width * 0.9 }, 
+                { backgroundColor, width: width || windowWidth * 0.9 }, 
                 style
             ]}
             onPress={onPress}
@@ -36,7 +37,6 @@ const CustomButton: React.FC<ButtonProps> = ({
                 {icon && (
                     <Icon 
                         name={icon} 
-                    
                         color={iconColor} 
                         containerStyle={styles.icon} 
                     />

@@ -13,8 +13,8 @@ import {
 } from "react-native";
 import { Icon } from "react-native-elements";
 import { useNavigation, useRoute } from "@react-navigation/native";
-import LottieView from "lottie-react-native";
 import Logo from "@/components/ui/Logo";
+import { ActivityIndicator } from "react-native";
 
 const OPENAI_API_KEY =
   "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";
@@ -27,11 +27,13 @@ const ChatScreen = () => {
   const flatListRef = useRef(null); // Reference to FlatList
   const route = useRoute();
   const { carDetails } = route.params || {};
+  const [conversationHistory, setConversationHistory] = useState([]); // Stores all messages
+  const [isUserScrolling, setIsUserScrolling] = useState(false);
 
   const [messages, setMessages] = useState([
     {
       id: "1",
-      text: `Hello! I am CarTechAI. How can I assist you with your car: ${carDetails?.make} ${carDetails?.model} - ${carDetails?.modelYear}?`,
+      text: `Hello! I am CarTechAI. How can I assist you with your car:\n${carDetails?.make} ${carDetails?.model} - ${carDetails?.modelYear}?`,
       sender: "bot",
     },
   ]);
@@ -86,7 +88,47 @@ const ChatScreen = () => {
     return [];
   };
 
-  // Function to send a message and get a response from OpenAI
+  const extractProblemFromHistory = (history) => {
+    const problemKeywords = [
+      "won't start",
+      "no power",
+      "overheating",
+      "engine noise",
+      "stalling",
+      "vibration",
+      "check engine light",
+      "oil leak",
+      "brake failure",
+      "transmission slipping",
+      "misfiring",
+      "won't accelerate",
+      "rough idle",
+      "battery drain",
+      "low fuel efficiency",
+    ];
+
+    let detectedIssue = "";
+
+    history.forEach((message) => {
+      if (message.sender === "user") {
+        problemKeywords.forEach((keyword) => {
+          if (message.text.toLowerCase().includes(keyword)) {
+            detectedIssue = keyword;
+          }
+        });
+      }
+    });
+
+    return detectedIssue || history[history.length - 1]?.text || "car issue";
+  };
+
+  const scrollToBottom = () => {
+    if (flatListRef.current) {
+      setTimeout(() => {
+        flatListRef.current.scrollToEnd({ animated: false });
+      }, 50);
+    }
+  };
 
   const handleSend = async () => {
     if (!inputText.trim()) return;
@@ -96,20 +138,22 @@ const ChatScreen = () => {
       text: inputText,
       sender: "user",
     };
-    setMessages([...messages, newMessage]);
+
+    setMessages((prevMessages) => [...prevMessages, newMessage]);
+    setConversationHistory((prevHistory) => [...prevHistory, newMessage]); // Store in history
     setInputText("");
     setIsTyping(true);
 
     const typingMessage = {
       id: "typing",
-      text: "CarTechAI is typing...",
+      text: "CarTechAI is analyzing...",
       sender: "bot",
     };
     setMessages((prevMessages) => [...prevMessages, typingMessage]);
 
     setTimeout(async () => {
       try {
-        // Fetch AI response (TEXT ONLY)
+        // Fetch AI response
         const response = await fetch(
           "https://api.openai.com/v1/chat/completions",
           {
@@ -119,14 +163,22 @@ const ChatScreen = () => {
               Authorization: `Bearer ${OPENAI_API_KEY}`,
             },
             body: JSON.stringify({
-              model: "gpt-4",
+              model: "gpt-4o-mini",
+              max_tokens: 150,
               messages: [
                 {
                   role: "system",
-                  content: `You are CarTechAI, an AI mechanic. The car details provided are: ${JSON.stringify(
-                    carDetails
-                  )}. Respond with text only. Only Respond to AutoMobile related queries.`,
+                  content: `You are CarTechAI, an AI automotive mechanic. 
+                  User's car details: ${JSON.stringify(carDetails)}. 
+                  ONLY respond to automobile-related issues. 
+                  Ignore non-automotive questions entirely. 
+                  Keep responses **concise**.
+                  `,
                 },
+                ...conversationHistory.map((msg) => ({
+                  role: msg.sender === "user" ? "user" : "assistant",
+                  content: msg.text,
+                })),
                 { role: "user", content: inputText },
               ],
             }),
@@ -135,28 +187,29 @@ const ChatScreen = () => {
 
         const data = await response.json();
         const aiResponse =
-          data.choices?.[0]?.message?.content.trim() +
-            "\n\n🔽 **For images and videos, see below.** 🔽" ||
-          "Sorry, I could not understand that.\n\n🔽 **For images and videos, see below.** 🔽";
+          data?.choices?.[0]?.message?.content?.trim() ||
+          "Sorry, I could not understand that.";
 
-        // Fetch images
-        const images = await fetchImagesFromSerpAPI(
-          `${inputText} ${carDetails?.make} ${carDetails?.model} ${carDetails?.modelYear} official diagrams`
+        // Extract issue from full conversation history for smarter search
+        const detectedIssue = extractProblemFromHistory(conversationHistory);
+        console.log("Detected Issue:", detectedIssue); // Debugging purpose
+
+        let images = [];
+        let youtubeVideo = null;
+
+        images = await fetchImagesFromSerpAPI(
+          `${detectedIssue} ${carDetails?.make} ${carDetails?.model} ${carDetails?.modelYear} official diagrams`
         );
 
-        // Fetch YouTube video
-        const youtubeVideo = await fetchYoutubeVideosFromSerpAPI(
-          `${inputText} ${carDetails?.make} ${carDetails?.model} ${carDetails?.modelYear} tutorial`
+        youtubeVideo = await fetchYoutubeVideosFromSerpAPI(
+          `${detectedIssue} ${carDetails?.make} ${carDetails?.model} ${carDetails?.modelYear} repair video tutorial`
         );
 
-        if (!youtubeVideo) {
-          console.warn("No YouTube video found for this query.");
-        }
-
+        // Typewriter effect for AI response
         const typeWriterEffect = (text, callback, completeCallback) => {
           let index = 0;
           let typedText = "";
-        
+
           const interval = setInterval(() => {
             if (index < text.length) {
               typedText += text.charAt(index);
@@ -164,22 +217,23 @@ const ChatScreen = () => {
               callback(typedText);
             } else {
               clearInterval(interval);
-              if (completeCallback) completeCallback(); // Ensure images and video data are added after typing
+              if (completeCallback) completeCallback();
             }
-          }, 10); // Typing speed
+          }, 10);
         };
-        
+
+        // Remove typing indicator and add AI response
         setMessages((prevMessages) => [
-          ...prevMessages.filter((message) => message.id !== "typing"),
+          ...prevMessages.filter((msg) => msg.id !== "typing"),
           {
             id: Date.now().toString(),
             text: "",
             sender: "bot",
-            images: [], // Placeholder
-            youtubeVideo: null, // Placeholder
+            images: [],
+            youtubeVideo: null,
           },
         ]);
-        
+
         typeWriterEffect(
           aiResponse,
           (updatedText) => {
@@ -192,7 +246,6 @@ const ChatScreen = () => {
             );
           },
           () => {
-            // Once typing is done, update message with images & video
             setMessages((prevMessages) =>
               prevMessages.map((msg, idx) =>
                 idx === prevMessages.length - 1
@@ -202,75 +255,76 @@ const ChatScreen = () => {
             );
           }
         );
-        
-        
       } catch (error) {
+        console.error("Error fetching AI response:", error);
+
         setMessages((prevMessages) => [
-          ...prevMessages.filter((message) => message.id !== "typing"),
+          ...prevMessages.filter((msg) => msg.id !== "typing"),
           {
             id: Date.now().toString(),
-            text: "Error: Unable to get a response.",
+            text: "Error: Unable to get a response. Please try again.",
             sender: "bot",
           },
         ]);
       } finally {
         setIsTyping(false);
       }
-    }, 200);
+    }, 50);
   };
 
   useEffect(() => {
-    if (flatListRef.current) {
-      // Use a small timeout to ensure the FlatList is fully updated
-      setTimeout(() => {
-        flatListRef.current.scrollToEnd({ animated: true });
-      }, 100); // Adjust the delay if needed
+    if (!isUserScrolling) {
+      scrollToBottom();
     }
-  }, [messages]); // Dependency array ensures it runs when messages change
+  }, [messages]); // Runs every time a new message is added
+
+  const [loadingStates, setLoadingStates] = useState({});
 
   const renderItem = ({ item }) => {
+    // Get loading states for images and thumbnails
+    const imageLoading = loadingStates[item.id] ?? true;
+    const thumbnailLoading = loadingStates[item.id + "-thumbnail"] ?? true;
+  
+    // Function to update loading state when images/thumbnails are loaded
+    const handleImageLoad = (id) => {
+      setLoadingStates((prev) => ({ ...prev, [id]: false }));
+    };
+  
+    // Regex patterns for detecting media and links
     const urlPattern = /(https?:\/\/[^\s]+)/g;
-    const imagePattern =
-      /(https?:\/\/[^\s)]+?\.(?:png|jpg|jpeg|gif))(?=[\s)]|$)/i;
+    const imagePattern = /(https?:\/\/[^\s)]+?\.(?:png|jpg|jpeg|gif))(?=[\s)]|$)/i;
     const pdfPattern = /(https?:\/\/[^\s)]+?\.pdf)(?=[\s)]|$)/i;
     const boldPattern = /\*\*(.*?)\*\*/g;
     const emojiPattern = /(\p{Emoji_Presentation}|\p{Extended_Pictographic})/gu;
-
+  
+    // Process text for links, bold text, and images
     const textWithMedia = item.text.split(urlPattern).map((part, index) => {
       if (imagePattern.test(part)) {
         const match = part.match(imagePattern);
         if (match) {
           const cleanImageUrl = match[1];
           return (
-            <TouchableOpacity
-              key={index}
-              onPress={() => Linking.openURL(cleanImageUrl)}
-            >
-              <Image
-                source={{ uri: cleanImageUrl }}
-                style={styles.chatImage}
-                resizeMode="contain"
-              />
+            <TouchableOpacity key={index} onPress={() => Linking.openURL(cleanImageUrl)}>
+              <View>
+                {imageLoading && <ActivityIndicator size="small" color="#00ff00" style={styles.loadingIndicator} />}
+                <Image
+                  source={{ uri: cleanImageUrl }}
+                  style={styles.chatImage}
+                  onLoad={() => handleImageLoad(item.id)} // Hide loader when image loads
+                />
+              </View>
             </TouchableOpacity>
           );
         }
       } else if (pdfPattern.test(part)) {
         return (
-          <TouchableOpacity
-            key={index}
-            style={styles.linkContainer}
-            onPress={() => Linking.openURL(part)}
-          >
+          <TouchableOpacity key={index} style={styles.linkContainer} onPress={() => Linking.openURL(part)}>
             <Text style={[styles.link, styles.boldText]}>📄 Open PDF</Text>
           </TouchableOpacity>
         );
       } else if (urlPattern.test(part)) {
         return (
-          <TouchableOpacity
-            key={index}
-            style={styles.linkContainer}
-            onPress={() => Linking.openURL(part)}
-          >
+          <TouchableOpacity key={index} style={styles.linkContainer} onPress={() => Linking.openURL(part)}>
             <Text style={styles.link}>{part}</Text>
           </TouchableOpacity>
         );
@@ -288,42 +342,36 @@ const ChatScreen = () => {
           </Text>
         );
       }
-
+  
       return (
         <Text key={index} style={styles.messageText}>
           {part}
         </Text>
       );
     });
-
+  
     return (
-      <View
-        style={[
-          styles.messageContainer,
-          item.sender === "user" ? styles.userMessage : styles.botMessage,
-        ]}
-      >
+      <View style={[styles.messageContainer, item.sender === "user" ? styles.userMessage : styles.botMessage]}>
         {textWithMedia}
-
+  
         {/* Display YouTube video with clickable link and thumbnail */}
         {item.youtubeVideo && (
           <View style={styles.youtubeContainer}>
             {/* Clickable YouTube Link */}
-            <TouchableOpacity
-              onPress={() => Linking.openURL(item.youtubeVideo.link)}
-            >
+            <TouchableOpacity onPress={() => Linking.openURL(item.youtubeVideo.link)}>
               <Text style={styles.link}>▶ {item.youtubeVideo.title}</Text>
             </TouchableOpacity>
-
-            {/* Clickable YouTube Thumbnail */}
-            <TouchableOpacity
-              onPress={() => Linking.openURL(item.youtubeVideo.link)}
-              style={styles.youtubeThumbnailContainer}
-            >
-              <Image
-                source={{ uri: item.youtubeVideo.thumbnail }}
-                style={styles.youtubeThumbnail}
-              />
+  
+            {/* Clickable YouTube Thumbnail with Loading Animation */}
+            <TouchableOpacity onPress={() => Linking.openURL(item.youtubeVideo.link)} style={styles.youtubeThumbnailContainer}>
+              <View>
+                {thumbnailLoading && <ActivityIndicator size="small" color="#FF0000" style={styles.loadingIndicator} />}
+                <Image
+                  source={{ uri: item.youtubeVideo.thumbnail }}
+                  style={styles.youtubeThumbnail}
+                  onLoad={() => handleImageLoad(item.id + "-thumbnail")} // Hide loader when thumbnail loads
+                />
+              </View>
               {/* Play Button Overlay */}
               <View style={styles.youtubePlayButton}>
                 <Text style={styles.playButtonText}>▶</Text>
@@ -331,16 +379,20 @@ const ChatScreen = () => {
             </TouchableOpacity>
           </View>
         )}
-
-        {/* Display images from SerpAPI */}
+  
+        {/* Display images from SerpAPI with Loading Animation */}
         {item.images?.length > 0 && (
           <View style={styles.imageContainer}>
             {item.images.map((img, index) => (
-              <TouchableOpacity
-                key={index}
-                onPress={() => Linking.openURL(img)}
-              >
-                <Image source={{ uri: img }} style={styles.chatImage} />
+              <TouchableOpacity key={index} onPress={() => Linking.openURL(img)}>
+                <View>
+                  {imageLoading && <ActivityIndicator size="small" color="#00ff00" style={styles.loadingIndicator} />}
+                  <Image
+                    source={{ uri: img }}
+                    style={styles.chatImage}
+                    onLoad={() => handleImageLoad(item.id)} // Hide loader when image loads
+                  />
+                </View>
               </TouchableOpacity>
             ))}
           </View>
@@ -348,6 +400,7 @@ const ChatScreen = () => {
       </View>
     );
   };
+  
 
   return (
     <KeyboardAvoidingView
@@ -374,10 +427,11 @@ const ChatScreen = () => {
           renderItem={renderItem}
           keyExtractor={(item) => item.id}
           style={styles.chatBox}
-          onContentSizeChange={() =>
-            flatListRef.current?.scrollToEnd({ animated: true })
-          }
-          onLayout={() => flatListRef.current?.scrollToEnd({ animated: true })}
+          onContentSizeChange={() => !isUserScrolling && scrollToBottom()} // Scroll when new content is added
+          onLayout={() => !isUserScrolling && scrollToBottom()} // Scroll when layout updates
+          onScrollBeginDrag={() => setIsUserScrolling(true)} // Stop auto-scroll when user starts scrolling
+          onMomentumScrollEnd={() => setIsUserScrolling(false)} // Re-enable auto-scroll when user stops
+          keyboardShouldPersistTaps="handled"
         />
 
         <View style={styles.inputContainer}>
@@ -402,7 +456,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-
     width: "100%",
   },
   chatImage: {
@@ -413,12 +466,13 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginTop: 5,
     alignSelf: "flex-start",
-    resizeMode: "contain",
+    resizeMode: "cover",
   },
 
   logo: {
-    flexDirection: "row",
+    flex: 1,
     alignItems: "center",
+    paddingLeft: 16,
   },
 
   animation: {
@@ -468,7 +522,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   title: {
-    fontFamily: 'Aeonik',
+    fontFamily: "Aeonik",
     fontSize: 20,
     color: "#fff",
     marginTop: 8,
@@ -485,30 +539,29 @@ const styles = StyleSheet.create({
     maxWidth: "80%",
   },
   userMessage: {
-    fontFamily: 'Aeonik',
+    fontFamily: "Aeonik",
     alignSelf: "flex-end",
     backgroundColor: "#fff",
   },
   botMessage: {
-    fontFamily: 'Aeonik',
+    fontFamily: "Aeonik",
     alignSelf: "flex-start",
     backgroundColor: "#95ff77",
   },
   messageText: {
-    fontFamily: 'Aeonik',
+    fontFamily: "Aeonik",
     fontSize: 16,
-    color: "#2a2e2e",
+    color: "#1a1c1b",
   },
   boldText: {
-    fontFamily: 'Aeonik',
+    fontFamily: "Aeonik",
     fontSize: 16,
   },
   imageContainer: {
     flexWrap: "wrap",
-    marginTop: 20,
   },
   typingText: {
-    fontFamily: 'Aeonik',
+    fontFamily: "Aeonik",
     fontSize: 16,
     color: "#2a2e2e",
     fontStyle: "italic",
@@ -525,7 +578,7 @@ const styles = StyleSheet.create({
   },
   link: {
     zIndex: 100,
-    fontFamily: 'Aeonik',
+    fontFamily: "Aeonik",
     fontSize: 16,
     color: "#0066cc", // Blue color for links
     textDecorationLine: "underline", // Underline for links
@@ -536,7 +589,7 @@ const styles = StyleSheet.create({
     height: 60,
     borderColor: "#444",
     marginBottom: 5,
-    marginTop  : 10,
+    marginTop: 10,
     width: "100%",
     backgroundColor: "#0f0f0f",
     position: "relative",
@@ -550,7 +603,7 @@ const styles = StyleSheet.create({
     borderRadius: 32,
     color: "#fff",
     backgroundColor: "#222",
-    fontFamily: 'Aeonik',
+    fontFamily: "Aeonik",
     fontSize: 16,
   },
   sendButton: {

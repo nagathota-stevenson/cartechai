@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "631048456486",
+    "project_id": "cartechai",
+    "storage_bucket": "cartechai.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:631048456486:android:f9e3dcca3390a1b653d9e7",
+        "android_client_info": {
+          "package_name": "com.cartechga.cartechai"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "631048456486-27tqnvubmng4bg1e3diu596cvfpl4j0o.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCYesjFri6rFqsUfHpH3utm6e-VK55zDYE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "631048456486-27tqnvubmng4bg1e3diu596cvfpl4j0o.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "631048456486-5i4ifpmu73jfbft48khdp77iljpp0ikh.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.cartechga.cartechai"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
