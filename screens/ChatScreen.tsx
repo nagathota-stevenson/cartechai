@@ -14,6 +14,7 @@ import {
 import { Icon } from "react-native-elements";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import LottieView from "lottie-react-native";
+import Logo from "@/components/ui/Logo";
 
 const OPENAI_API_KEY =
   "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";
@@ -149,7 +150,7 @@ const ChatScreen = () => {
         );
 
         if (!youtubeVideo) {
-          console.warn("⚠ No YouTube video found for this query.");
+          console.warn("No YouTube video found for this query.");
         }
 
         const typeWriterEffect = (text, callback, completeCallback) => {
@@ -356,13 +357,7 @@ const ChatScreen = () => {
       <View style={styles.container}>
         <View style={styles.header}>
           <View style={styles.logo}>
-            <LottieView
-              source={require("../assets/animations/ai.json")}
-              autoPlay
-              loop
-              style={styles.animation}
-            />
-            <Text style={styles.title}>CarTechAI</Text>
+            <Logo />
           </View>
 
           <TouchableOpacity
@@ -473,7 +468,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   title: {
-    fontFamily: "WorkSans",
+    fontFamily: 'Aeonik',
     fontSize: 20,
     color: "#fff",
     marginTop: 8,
@@ -490,22 +485,22 @@ const styles = StyleSheet.create({
     maxWidth: "80%",
   },
   userMessage: {
-    fontFamily: "WorkSans",
+    fontFamily: 'Aeonik',
     alignSelf: "flex-end",
     backgroundColor: "#fff",
   },
   botMessage: {
-    fontFamily: "WorkSans",
+    fontFamily: 'Aeonik',
     alignSelf: "flex-start",
     backgroundColor: "#95ff77",
   },
   messageText: {
-    fontFamily: "WorkSans",
+    fontFamily: 'Aeonik',
     fontSize: 16,
     color: "#2a2e2e",
   },
   boldText: {
-    fontFamily: "WorkSans",
+    fontFamily: 'Aeonik',
     fontSize: 16,
   },
   imageContainer: {
@@ -513,7 +508,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   typingText: {
-    fontFamily: "WorkSans",
+    fontFamily: 'Aeonik',
     fontSize: 16,
     color: "#2a2e2e",
     fontStyle: "italic",
@@ -530,7 +525,7 @@ const styles = StyleSheet.create({
   },
   link: {
     zIndex: 100,
-    fontFamily: "WorkSans",
+    fontFamily: 'Aeonik',
     fontSize: 16,
     color: "#0066cc", // Blue color for links
     textDecorationLine: "underline", // Underline for links
@@ -555,7 +550,7 @@ const styles = StyleSheet.create({
     borderRadius: 32,
     color: "#fff",
     backgroundColor: "#222",
-    fontFamily: "WorkSans",
+    fontFamily: 'Aeonik',
     fontSize: 16,
   },
   sendButton: {

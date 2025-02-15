@@ -7,6 +7,7 @@ import HomeScreen from '../screens/HomeScreen';  // Import your HomeScreen
 import CarDetailsScreen from '../screens/CarDetailsScreen';  // Import the CarDetailsScreen
 import ChatScreen from '@/screens/ChatScreen';
 import EnterCarDetailsScreen from '@/screens/EnterCarDetails';
+import LoginScreen from '@/screens/LoginScreen';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -15,6 +16,9 @@ const Stack = createStackNavigator();  // Initialize the stack navigator
 export default function Layout() {
   const [loaded] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
+    Arame: require('../assets/fonts/Arame-Regular.ttf'),
+    Robit: require('../assets/fonts/robit.otf'),
+    Aeonik: require('../assets/fonts/Aeonik-Regular.ttf'),
   });
 
   useEffect(() => {
@@ -30,7 +34,7 @@ export default function Layout() {
   return (
     <NavigationIndependentTree>
       <Stack.Navigator
-      initialRouteName="Home"
+      initialRouteName="Login"
       screenOptions={{
         headerShown: false,
         animationEnabled: true,
@@ -46,6 +50,10 @@ export default function Layout() {
       <Stack.Screen 
         name="Home" 
         component={HomeScreen} 
+      />
+      <Stack.Screen 
+        name="Login" 
+        component={LoginScreen} 
       />
       <Stack.Screen 
         name="CarDetails" 

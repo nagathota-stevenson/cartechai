@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, Alert, useWindowDimensions } from 'react-native';
 import CustomButton from '@/components/Button';
 import { useNavigation } from '@react-navigation/native';
+import Logo from '@/components/ui/Logo';
+import { Icon } from 'react-native-elements';
 
 export default function EnterCarDetailsScreen() {
   const navigation = useNavigation();
@@ -39,9 +41,12 @@ export default function EnterCarDetailsScreen() {
       style={{ flex: 1 }}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <View style={styles.container}>
-      <Text style={styles.title}>Enter Car Details</Text>
-      <Text style={styles.subtitle}>Please Provide Details for Better Assistance</Text>
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center', paddingTop: 50 }]}>
+      <Logo />
+      {/* <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+                 <Icon name="edit-note" iconStyle={{fontSize: 40, color: "#fff", paddingBottom: 10, paddingRight: 8 }}  />
+                <Text style={styles.title}>Enter Car Details</Text>
+            </View> */}
       <ScrollView contentContainerStyle={{ flexGrow: 1 }} showsVerticalScrollIndicator={false}>
         {Object.keys(carDetails).map((key) => (
         <TextInput
@@ -60,7 +65,7 @@ export default function EnterCarDetailsScreen() {
         icon="chat"
         onPress={goToChat}
         style={styles.chatButton}
-        disabled={!isAnyFieldFilled()} // Disable button if no fields are filled
+        disabled={!isAnyFieldFilled()} 
       />
       </View>
     </KeyboardAvoidingView>
@@ -79,19 +84,19 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   subtitle: {
-    fontFamily: 'WorkSans',
+    fontFamily: 'Aeonik',
     fontSize: 16,
-    color: '#555D58',
+    color: '#fff',
     textAlign: 'center',
     marginBottom: 16,
   },
   title: {
-    fontSize: 24,
-    fontFamily: 'WorkSans',
+    fontSize: 32,
+    fontFamily: 'Aeonik',
     color: '#fff',
     textAlign: 'center',
-    marginTop: 40,
-    marginBottom: 8,
+    
+    marginBottom: 16,
   },
   input: {
     alignSelf: 'center',
@@ -101,6 +106,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 12,
     borderRadius: 32,
+    fontFamily: "Aeonik"
   },
  
 });

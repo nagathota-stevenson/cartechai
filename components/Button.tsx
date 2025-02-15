@@ -1,6 +1,6 @@
 import React from 'react';
 import { TouchableOpacity, Text, StyleSheet, GestureResponderEvent, View, useWindowDimensions } from 'react-native';
-import { Icon } from 'react-native-elements'; // Assuming you're using react-native-elements for icons
+import { Icon } from 'react-native-elements';
 
 interface ButtonProps {
     title: string;
@@ -8,20 +8,42 @@ interface ButtonProps {
     backgroundColor?: string;
     color?: string;
     style?: object;
-    icon?: string; // Add icon prop
-    iconColor?: string; // Add icon color prop
+    icon?: string;
+    iconColor?: string;
 }
 
-const CustomButton: React.FC<ButtonProps> = ({ title, onPress, backgroundColor = '#95ff77', color = '#2a2e2e', style, icon, iconColor = '#2a2e2e' }) => {
+const CustomButton: React.FC<ButtonProps> = ({ 
+    title, 
+    onPress, 
+    backgroundColor = '#95ff77', 
+    color = '#2a2e2e', 
+    style, 
+    icon, 
+    iconColor = '#2a2e2e' 
+}) => {
     const { width } = useWindowDimensions();
+    
     return (
         <TouchableOpacity
-            style={[styles.button, { backgroundColor, width: width * 0.9 }, style]} // Adjust width here
+            style={[
+                styles.button, 
+                { backgroundColor, width: width * 0.9 }, 
+                style
+            ]}
             onPress={onPress}
         >
             <View style={styles.content}>
-                {icon && <Icon name={icon} color={iconColor} style={styles.icon} />} 
-                <Text style={[styles.text, { color }]}>{title}</Text>
+                {icon && (
+                    <Icon 
+                        name={icon} 
+                    
+                        color={iconColor} 
+                        containerStyle={styles.icon} 
+                    />
+                )}
+                <Text style={[styles.text, { color }]} numberOfLines={1}>
+                    {title}
+                </Text>
             </View>
         </TouchableOpacity>
     );
@@ -29,26 +51,30 @@ const CustomButton: React.FC<ButtonProps> = ({ title, onPress, backgroundColor =
 
 const styles = StyleSheet.create({
     button: {
-        width: '100%',
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center', // Ensures text remains centered
         padding: 16,
         borderRadius: 32,
         margin: 16,
-        textAlign: 'center',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        alignItems: 'center',
-        justifyContent: 'center',
+        position: 'relative', // Ensures absolute positioning for the icon works
     },
     content: {
         flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'center',
+        width: '100%', // Ensures full-width alignment
+        position: 'relative',
     },
     icon: {
-        marginRight: 8,
+        position: 'absolute',
+        left: 8, 
     },
     text: {
-        fontFamily: 'WorkSans',
+        fontFamily: 'Aeonik',
         fontSize: 16,
+        flex: 1, // Ensures text stays centered
+        textAlign: 'center',
     },
 });
 

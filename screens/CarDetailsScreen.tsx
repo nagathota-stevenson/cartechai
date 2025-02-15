@@ -4,6 +4,7 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import LottieView from 'lottie-react-native'; // Import Lottie
 import CustomButton from '@/components/Button';
 import { CarDetails } from '@/types/CarDetails';
+import Logo from '@/components/ui/Logo';
 
 export default function CarDetailsScreen() {
   const route = useRoute();
@@ -104,15 +105,9 @@ export default function CarDetailsScreen() {
       showsHorizontalScrollIndicator={false}
       horizontal={false}
       >
-        {/* Lottie Animation */}
-        <LottieView
-          source={require('../assets/animations/ai.json')}  // Ensure the file path is correct
-          autoPlay
-          loop
-          style={styles.animation}
-        />
-        <Text style={styles.title}>Car Information</Text>
-        <Text style={styles.subtitle}>Details for VIN: {vin}</Text>
+        <Logo/>
+        <Text style={[styles.subtitle, {marginBottom: 0}]}>Details for VIN:</Text>
+        <Text style={[styles.subtitle, {color: '#95ff77'}]}>{vin}</Text>
 
         {loading ? (
           <ActivityIndicator size="large" color="#95ff77" />
@@ -202,15 +197,15 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 32,
-    fontFamily: 'WorkSans',
+    fontFamily: 'Aeonik',
     marginBottom: 12,
     textAlign: 'center',
     color: '#fff',
   },
   subtitle: {
-    fontSize: 16,
-    fontFamily: 'WorkSans',
-    color: '#555D58',
+    fontSize: 32,
+    fontFamily: 'Aeonik',
+    color: '#fff',
     textAlign: 'center',
     marginBottom: 20,
   },
@@ -224,13 +219,13 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   label: {
-    fontFamily: 'WorkSans',
+    fontFamily: 'Aeonik',
     fontSize: 16,
     color: '#fff',
    
   },
   value: {
-    fontFamily: 'WorkSans',
+    fontFamily: 'Aeonik',
     fontSize: 16,
     color: '#95ff77',
     flex: 1,
