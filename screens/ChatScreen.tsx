@@ -15,6 +15,9 @@ import { Icon } from "react-native-elements";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import Logo from "@/components/ui/Logo";
 import { ActivityIndicator } from "react-native";
+import {Chat, Message } from '@/types/Firestore';
+import { createChat, addMessage } from "../utils/Chat";
+
 
 const OPENAI_API_KEY =
   "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";
@@ -29,6 +32,19 @@ const ChatScreen = () => {
   const { carDetails } = route.params || {};
   const [conversationHistory, setConversationHistory] = useState([]); // Stores all messages
   const [isUserScrolling, setIsUserScrolling] = useState(false);
+  const [chatId, setChatId] = useState(null);
+
+  useEffect(() => {
+    const initChat = async () => {
+      if (!chatId) {  
+        const createdChatId = await createChat();
+        if (createdChatId) {
+          setChatId(createdChatId);
+        }
+      }
+    };
+    initChat();
+  }, [chatId]);
 
   const [messages, setMessages] = useState([
     {
@@ -88,40 +104,7 @@ const ChatScreen = () => {
     return [];
   };
 
-  const extractProblemFromHistory = (history) => {
-    const problemKeywords = [
-      "won't start",
-      "no power",
-      "overheating",
-      "engine noise",
-      "stalling",
-      "vibration",
-      "check engine light",
-      "oil leak",
-      "brake failure",
-      "transmission slipping",
-      "misfiring",
-      "won't accelerate",
-      "rough idle",
-      "battery drain",
-      "low fuel efficiency",
-    ];
-
-    let detectedIssue = "";
-
-    history.forEach((message) => {
-      if (message.sender === "user") {
-        problemKeywords.forEach((keyword) => {
-          if (message.text.toLowerCase().includes(keyword)) {
-            detectedIssue = keyword;
-          }
-        });
-      }
-    });
-
-    return detectedIssue || history[history.length - 1]?.text || "car issue";
-  };
-
+  
   const scrollToBottom = () => {
     if (flatListRef.current) {
       setTimeout(() => {
@@ -139,10 +122,24 @@ const ChatScreen = () => {
       sender: "user",
     };
 
+    if (!chatId) {
+      console.error("Chat ID is missing. Cannot store messages.");
+      return;
+    }
+
+    const userMessage = {
+      id: Date.now().toString(),
+      text: inputText,
+      sender: "user",
+    };
+  
+
     setMessages((prevMessages) => [...prevMessages, newMessage]);
     setConversationHistory((prevHistory) => [...prevHistory, newMessage]); // Store in history
     setInputText("");
     setIsTyping(true);
+
+    await addMessage(chatId, "user", inputText);
 
     const typingMessage = {
       id: "typing",
@@ -190,21 +187,19 @@ const ChatScreen = () => {
           data?.choices?.[0]?.message?.content?.trim() ||
           "Sorry, I could not understand that.";
 
-        // Extract issue from full conversation history for smarter search
-        const detectedIssue = extractProblemFromHistory(conversationHistory);
-        console.log("Detected Issue:", detectedIssue); // Debugging purpose
-
         let images = [];
         let youtubeVideo = null;
 
         images = await fetchImagesFromSerpAPI(
-          `${detectedIssue} ${carDetails?.make} ${carDetails?.model} ${carDetails?.modelYear} official diagrams`
+          `${inputText} ${carDetails?.make} ${carDetails?.model} ${carDetails?.modelYear} parts images or official diagrams`
         );
 
         youtubeVideo = await fetchYoutubeVideosFromSerpAPI(
-          `${detectedIssue} ${carDetails?.make} ${carDetails?.model} ${carDetails?.modelYear} repair video tutorial`
+          `${inputText} ${carDetails?.make} ${carDetails?.model} ${carDetails?.modelYear} repair video tutorial`
         );
 
+        await addMessage(chatId, "CarTechAI", aiResponse, images, youtubeVideo);
+        
         // Typewriter effect for AI response
         const typeWriterEffect = (text, callback, completeCallback) => {
           let index = 0;
@@ -253,11 +248,15 @@ const ChatScreen = () => {
                   : msg
               )
             );
+            
           }
+
         );
+       
       } catch (error) {
         console.error("Error fetching AI response:", error);
-
+        await addMessage(chatId, "CarTechAI", "Error: Unable to get a response. Please try again.");
+        
         setMessages((prevMessages) => [
           ...prevMessages.filter((msg) => msg.id !== "typing"),
           {
@@ -463,7 +462,7 @@ const styles = StyleSheet.create({
     maxWidth: 300,
     height: undefined,
     aspectRatio: 16 / 9,
-    borderRadius: 10,
+    borderRadius: 8,
     marginTop: 5,
     alignSelf: "flex-start",
     resizeMode: "cover",
@@ -518,7 +517,7 @@ const styles = StyleSheet.create({
     paddingTop: 50,
     paddingHorizontal: 20,
     paddingBottom: 15,
-    backgroundColor: "#0f0f0f",
+    backgroundColor: "#1a1c1b",
     alignItems: "center",
   },
   title: {
@@ -536,7 +535,7 @@ const styles = StyleSheet.create({
     padding: 10,
     marginVertical: 5,
     borderRadius: 16,
-    maxWidth: "80%",
+    
   },
   userMessage: {
     fontFamily: "Aeonik",
@@ -591,7 +590,6 @@ const styles = StyleSheet.create({
     marginBottom: 5,
     marginTop: 10,
     width: "100%",
-    backgroundColor: "#0f0f0f",
     position: "relative",
   },
   input: {
@@ -600,9 +598,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     height: 60,
     borderColor: "#555",
-    borderRadius: 32,
+    borderRadius: 16,
     color: "#fff",
-    backgroundColor: "#222",
+    backgroundColor: "#1a1c1b",
     fontFamily: "Aeonik",
     fontSize: 16,
   },

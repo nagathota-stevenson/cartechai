@@ -55,7 +55,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center', // Ensures text remains centered
         padding: 16,
-        borderRadius: 32,
+        borderRadius: 16,
         margin: 16,
         position: 'relative', // Ensures absolute positioning for the icon works
     },

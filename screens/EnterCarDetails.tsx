@@ -7,7 +7,6 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
-  Alert,
   useWindowDimensions,
   TouchableOpacity,
 } from "react-native";
@@ -34,6 +33,9 @@ export default function EnterCarDetailsScreen() {
     plantCity: "",
     plantCountry: "",
   });
+
+  // State to track focused input
+  const [focusedInput, setFocusedInput] = useState(null);
 
   const handleChange = (field, value) => {
     setCarDetails({ ...carDetails, [field]: value });
@@ -67,7 +69,11 @@ export default function EnterCarDetailsScreen() {
           {Object.keys(carDetails).map((key) => (
             <TextInput
               key={key}
-              style={[styles.input, { width: width }]}
+              style={[
+                styles.input,
+                { width: width },
+                focusedInput === key && styles.inputFocused, 
+              ]}
               placeholder={key
                 .replace(/([A-Z])/g, " $1")
                 .trim()
@@ -75,22 +81,19 @@ export default function EnterCarDetailsScreen() {
               placeholderTextColor="#aaa"
               value={carDetails[key]}
               onChangeText={(text) => handleChange(key, text)}
+              onFocus={() => setFocusedInput(key)} // Set focused input
+              onBlur={() => setFocusedInput(null)} // Clear focused input
             />
           ))}
         </ScrollView>
-        {/* <TouchableOpacity
-            style={[styles.backButton,  { width: width * 0.05 }]}
-            onPress={() => navigation.goBack()}
-          >
-            <Icon name="arrow-left" type="feather" color="#fff" />
-          </TouchableOpacity> */}
+
         <CustomButton
-            title="Chat"
-            icon="chat"
-            onPress={goToChat}
-            style={styles.chatButton}
-            disabled={!isAnyFieldFilled()}
-          />
+          title="Chat"
+          icon="chat"
+          onPress={goToChat}
+          style={styles.chatButton}
+          disabled={!isAnyFieldFilled()}
+        />
       </View>
     </KeyboardAvoidingView>
   );
@@ -99,14 +102,14 @@ export default function EnterCarDetailsScreen() {
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
-    paddingBottom:24,
+    paddingBottom: 24,
     height: "100%",
     justifyContent: "center",
-    backgroundColor: "#0f0f0f",
+    backgroundColor: "#1a1c1b",
   },
   chatButton: {
-    width: "auto", 
-    paddingHorizontal: 16, 
+    width: "auto",
+    paddingHorizontal: 16,
   },
   subtitle: {
     fontFamily: "Aeonik",
@@ -125,21 +128,25 @@ const styles = StyleSheet.create({
   input: {
     alignSelf: "center",
     fontSize: 16,
-    backgroundColor: "#222",
+    borderColor: "#2a2e2e",
+    borderWidth: 1.5,
     color: "#fff",
     padding: 16,
     marginBottom: 12,
-    borderRadius: 32,
+    borderRadius: 16,
     fontFamily: "Aeonik",
   },
+  inputFocused: {
+    borderColor: "#95ff77", 
+  },
   buttonContainer: {
-    flexDirection: "row",  
-    alignItems: "center",  
-    justifyContent: "center", 
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     alignSelf: "center",
   },
   backButton: {
-    borderRadius: 32, 
+    borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",
   },

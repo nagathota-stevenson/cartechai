@@ -53,7 +53,7 @@ export default function HomeScreen() {
           <CustomButton
             title="Enter Car Details"
             icon="edit-note"
-            backgroundColor="#1a1c1b"
+            backgroundColor="#2a2e2e"
             color="#fff"
             iconColor="#fff"
             onPress={handleEnterCarDetails}
@@ -85,7 +85,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#0f0f0f",
+    backgroundColor: "#1a1c1b",
   },
   scrollContainer: {
     flexGrow: 1,
@@ -121,7 +121,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Aeonik',
     padding: 16,
     fontSize: 16,
-    borderRadius: 32,
+    borderRadius: 16,
     marginTop: 16,
     marginBottom: 8,
     backgroundColor: "#fff",

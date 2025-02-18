@@ -1,6 +1,8 @@
 import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
+import { getAuth, initializeAuth, getReactNativePersistence } from "firebase/auth";
+import ReactNativeAsyncStorage from "@react-native-async-storage/async-storage";
 
+// Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyDsm-_zhMcZWF7QYCLAxliHzbCHY6R1Hlk",
   authDomain: "cartechai.firebaseapp.com",
@@ -11,6 +13,15 @@ const firebaseConfig = {
   measurementId: "G-8FNE17BKV3"
 };
 
-// Initialize Firebase
-export const app = initializeApp(firebaseConfig);
-export const FIREBASE_AUTH = getAuth(app);
+// ✅ Initialize Firebase app
+const app = initializeApp(firebaseConfig);
+
+// ✅ Correctly initialize Auth with AsyncStorage for persistence in React Native
+initializeAuth(app, {
+  persistence: getReactNativePersistence(ReactNativeAsyncStorage),
+});
+
+// ✅ Use getAuth(app) AFTER initializing it
+const auth = getAuth(app);
+
+export { app, auth };

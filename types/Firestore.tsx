@@ -42,4 +42,31 @@ export interface User {
     message: string;
     timestamp: string; // ISO timestamp
   }
-  
+
+  export interface CommunityPost {
+    post_id: string;
+    user_id: string; // User who created the post
+    title: string;
+    description: string;
+    status: 'open' | 'closed'; // User can close the post when resolved
+    created_at: string; // ISO timestamp
+    updated_at: string; // ISO timestamp
+    tags?: string[]; // Optional, to categorize questions
+}
+
+export interface CommunityResponse {
+    response_id: string;
+    post_id: string; // The post this response belongs to
+    user_id: string; // User who responded
+    message: string;
+    created_at: string; // ISO timestamp
+    is_accepted: boolean; // True if the question poster accepted this response
+}
+
+export interface CommunityLike {
+    like_id: string;
+    user_id: string;
+    post_id: string; // OR response_id (likes can be for posts or responses)
+    type: 'post' | 'response'; // Defines if it's liking a post or response
+    created_at: string;
+}

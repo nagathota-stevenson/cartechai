@@ -8,80 +8,122 @@ import ChatScreen from "@/screens/ChatScreen";
 import EnterCarDetailsScreen from "@/screens/EnterCarDetails";
 import LoginScreen from "@/screens/LoginScreen";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
-import app from "../config/firebaseConfig";
+import { app, auth } from "../config/firebaseConfig";
 import CustomDrawer from "@/components/CustomDrawer";
 import * as SplashScreen from "expo-splash-screen";
 import { useFonts } from "expo-font";
+import CommunityScreen from "@/screens/CommunityScreen";
+import UserScreen from "@/screens/UserScreen";
+import CreatePostScreen from "@/screens/CreatePostScreen";
+import PostDetailsScreen from "@/screens/PostDetailsScreen";
 
 const Drawer = createDrawerNavigator();
 SplashScreen.preventAutoHideAsync();
 
-// ✅ Function to wrap any screen with the drawer toggle button
-const ScreenWithDrawer = ({ component: Component }) => {
+const ScreenWithDrawer = ({ component: Component, navigation }) => {
   const isDrawerOpen = useDrawerStatus() === "open";
 
   return (
     <View style={styles.container}>
-      {!isDrawerOpen && (
-        <View style={styles.drawerButton}>
-          <DrawerToggleButton tintColor="white" />
-        </View>
-      )}
-      <Component />
+      {/* Always show the DrawerToggleButton */}
+      <View style={styles.drawerButton}>
+        <DrawerToggleButton tintColor="white" />
+      </View>
+      <Component navigation={navigation} />
     </View>
   );
 };
 
 const Layout = () => {
   const [user, setUser] = useState(null);
-  const auth = getAuth(app);
+  const [loading, setLoading] = useState(true); 
 
-  // ✅ Ensure all custom fonts are correctly loaded
   const [fontsLoaded] = useFonts({
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
     Arame: require("../assets/fonts/Arame-Regular.ttf"),
     Robit: require("../assets/fonts/robit.otf"),
     Aeonik: require("../assets/fonts/Aeonik-Regular.ttf"),
   });
-
-  // ✅ Only hide the splash screen when fonts are fully loaded
   useEffect(() => {
     if (fontsLoaded) {
       SplashScreen.hideAsync();
     }
   }, [fontsLoaded]);
 
-  // ✅ Ensure authentication state is properly handled
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
+      setLoading(false); 
     });
     return unsubscribe;
   }, []);
 
-  // ✅ Prevent rendering before fonts are loaded
+  if (loading) {
+    return null; // or return a loading spinner
+  }
+
   if (!fontsLoaded) {
     return null;
   }
 
   return (
-    <NavigationIndependentTree>
+    <>
       {user ? (
         <Drawer.Navigator
           drawerContent={(props) => <CustomDrawer {...props} />}
-          screenOptions={{ headerShown: false }}
+          screenOptions={{
+            headerShown: false,
+            overlayColor: "rgba(0, 0, 0, 0.5)",
+            drawerPosition: "left", 
+          }}
         >
-          <Drawer.Screen name="Home">
-            {() => <ScreenWithDrawer component={HomeScreen} />}
+          <Drawer.Screen
+            name="Home"
+            options={{ drawerItemStyle: { display: "none" } }} 
+          >
+            {(props) => <ScreenWithDrawer {...props} component={HomeScreen} />}
           </Drawer.Screen>
-          <Drawer.Screen name="CarDetails">
-            {() => <ScreenWithDrawer component={CarDetailsScreen} />}
+          <Drawer.Screen
+            name="CarDetails"
+            options={{ drawerItemStyle: { display: "none" } }} 
+          >
+            {(props) => <ScreenWithDrawer {...props} component={CarDetailsScreen} />}
           </Drawer.Screen>
-          <Drawer.Screen name="ChatScreen">
-            {() => <ScreenWithDrawer component={ChatScreen} />}
+          <Drawer.Screen
+            name="CommunityScreen"
+            options={{ drawerItemStyle: { display: "none" } }} 
+          >
+            {(props) => <ScreenWithDrawer {...props} component={CommunityScreen} />}
           </Drawer.Screen>
-          <Drawer.Screen name="EnterCarDetails">
-            {() => <ScreenWithDrawer component={EnterCarDetailsScreen} />}
+          <Drawer.Screen
+            name="EnterCarDetails"
+            options={{ drawerItemStyle: { display: "none" } }} 
+          >
+            {(props) => <ScreenWithDrawer {...props} component={EnterCarDetailsScreen} />}
+          </Drawer.Screen>
+          <Drawer.Screen
+            name="UserScreen"
+            options={{ drawerItemStyle: { display: "none" } }} 
+          >
+            {(props) => <ScreenWithDrawer {...props} component={UserScreen} />}
+          </Drawer.Screen>
+          <Drawer.Screen
+            name="ChatScreen"
+            options={{ drawerItemStyle: { display: "none" } }} 
+          >
+            {(props) => <ScreenWithDrawer {...props} component={ChatScreen} />}
+          </Drawer.Screen>
+          <Drawer.Screen
+            name="CreatePostScreen"
+            options={{ drawerItemStyle: { display: "none" } }} 
+          >
+            {(props) => <ScreenWithDrawer {...props} component={CreatePostScreen} />}
+          </Drawer.Screen>
+          <Drawer.Screen
+            name="PostDetailsScreen"
+            options={{ drawerItemStyle: { display: "none" } }} 
+          >
+            {(props) => <ScreenWithDrawer {...props} component={PostDetailsScreen} />}
           </Drawer.Screen>
         </Drawer.Navigator>
       ) : (
@@ -89,20 +131,20 @@ const Layout = () => {
           <Drawer.Screen name="Login" component={LoginScreen} />
         </Drawer.Navigator>
       )}
-    </NavigationIndependentTree>
+    </>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#0f0f0f",
   },
   drawerButton: {
     position: "absolute",
-    top: 58, // Adjust position
-    left: 8, // Adjust position
-    zIndex: 100, // Ensure it's above other elements
+    top: 58, // Adjust this value based on your layout
+    left: 16, // Adjust this value based on your layout
+    zIndex: 100,
+    backgroundColor: "transparent", // Ensure the button is visible
   },
 });
 

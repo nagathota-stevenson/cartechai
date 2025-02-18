@@ -17,15 +17,19 @@ import CustomButton from "@/components/Button";
 import * as Google from "expo-auth-session/providers/google";
 import { FontAwesome } from "@expo/vector-icons";
 import * as WebBrowser from "expo-web-browser";
-import { FIREBASE_AUTH } from "../config/firebaseConfig";
+import { auth } from "../config/firebaseConfig";
 import {
   signInWithEmailAndPassword,
   onAuthStateChanged,
   createUserWithEmailAndPassword,
+  getAuth
 } from "firebase/auth";
 import { SocialIcon } from "react-native-elements";
 import { Image } from "react-native";
 import Logo from "@/components/ui/Logo";
+import { getFirestore, doc, setDoc } from "firebase/firestore";
+import { app } from "../config/firebaseConfig"; 
+import { User } from "../types/Firestore";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -33,15 +37,15 @@ export default function LoginScreen() {
   const navigation = useNavigation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
   const width = useWindowDimensions().width * 0.9;
-  const auth = FIREBASE_AUTH;
-
+  
   const [request, response, promptAsync] = Google.useAuthRequest({
-    iosClientId:
-      "631048456486-5i4ifpmu73jfbft48khdp77iljpp0ikh.apps.googleusercontent.com",
-    androidClientId:
-      "631048456486-27tqnvubmng4bg1e3diu596cvfpl4j0o.apps.googleusercontent.com",
+    iosClientId: "689253185881-vmc7t8c485hj8coo0qum31o99dpbdai7.apps.googleusercontent.com",
+    androidClientId: "631048456486-27tqnvubmng4bg1e3diu596cvfpl4j0o.apps.googleusercontent.com",
+    redirectUri: "https://auth.expo.io/@stevenson.nagathota/cartechai",
   });
+  
 
   useEffect(() => {
     if (response?.type === "success") {
@@ -51,20 +55,67 @@ export default function LoginScreen() {
   }, [response]);
 
   const handleCreateUser = async () => {
+    if (!email || !password) {
+      Alert.alert("Missing Information", "Please enter both email and password.");
+      return;
+    }
+
+    const db = getFirestore(app);
+
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
+      // Create user in Firebase Authentication
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // Prepare user data for Firestore
+      const userData: User = {
+        user_id: user.uid, // Firebase UID
+        email: email,
+        name: "", // Optional name (can be updated later)
+        created_at: new Date().toISOString(), // Current timestamp
+      };
+
+      // Add user to Firestore collection "users"
+      await setDoc(doc(db, "users", user.uid), userData);
+
+      // Navigate to Home screen after successful signup
       navigation.navigate("Home");
     } catch (error) {
-      Alert.alert("Login Error", error.message);
+      console.log(error);
+      Alert.alert("Signup Error", error.message);
     }
   };
 
-  const handleLoginWithEmailAndPassowrd = async () => {
+  const handleLoginWithEmailAndPassword = async () => {
+    if (!email || !password) {
+      Alert.alert("Missing Information", "Please enter both email and password.");
+      return;
+    }
+    setLoading(true);
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      await signInWithEmailAndPassword(auth, email.trim(), password);
       navigation.navigate("Home");
     } catch (error) {
-      Alert.alert("Login Error", error.message);
+      let errorMessage = "Something went wrong. Please try again.";
+
+      switch (error.code) {
+        case "auth/invalid-email":
+          errorMessage = "Invalid email format. Please check your email.";
+          break;
+        case "auth/user-not-found":
+          errorMessage = "No account found with this email.";
+          break;
+        case "auth/wrong-password":
+          errorMessage = "Incorrect password. Please try again.";
+          break;
+        case "auth/too-many-requests":
+          errorMessage = "Too many failed attempts. Try again later.";
+          break;
+      }
+      console.log(error);
+      Alert.alert("Login Error", errorMessage);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -123,7 +174,7 @@ export default function LoginScreen() {
               icon="mail"
               color="#1a1c1b"
               iconColor="#1a1c1b"
-              onPress={handleLoginWithEmailAndPassowrd}
+              onPress={handleLoginWithEmailAndPassword}
             />
           ) : (
             <CustomButton
@@ -138,7 +189,7 @@ export default function LoginScreen() {
               styles.socialButton,
               {
                 width: width,
-                backgroundColor: "#1a1c1b",
+                backgroundColor: "#2a2e2e",
                 flexDirection: "row",
                 alignItems: "center",
                 justifyContent: "center",
@@ -202,7 +253,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#0f0f0f",
+    backgroundColor: "#1a1c1b",
   },
   scrollContainer: {
     flexGrow: 1,
@@ -234,7 +285,7 @@ const styles = StyleSheet.create({
   socialButton: {
     width: "100%",
     padding: 16,
-    borderRadius: 32,
+    borderRadius: 16,
     margin: 16,
     textAlign: "center",
     alignItems: "center",
@@ -246,7 +297,7 @@ const styles = StyleSheet.create({
     fontFamily: "Aeonik",
     backgroundColor: "#fff",
     color: "#000",
-    borderRadius: 32,
+    borderRadius: 16,
     paddingHorizontal: 18,
     paddingVertical: 16,
     marginTop: 16,
