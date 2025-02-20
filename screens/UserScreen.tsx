@@ -8,7 +8,6 @@ import {
   ScrollView,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import { Icon } from "react-native-elements";
 import { getAuth, signOut } from "firebase/auth";
 import { app } from "../config/firebaseConfig";
 import Logo from "@/components/ui/Logo";
@@ -22,7 +21,7 @@ export default function UserScreen() {
   const handleLogout = async () => {
     try {
       await signOut(auth);
-      navigation.navigate("Home"); // Navigate to Home after logout
+      navigation.navigate("Home"); 
     } catch (error) {
       console.error("Logout error:", error);
     }
@@ -75,7 +74,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#1a1c1b",
-    padding: 16,
+    width: '100%'
   },
   scrollContainer: {
     flexGrow: 1,

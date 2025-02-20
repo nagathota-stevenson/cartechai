@@ -16,7 +16,7 @@ import { useNavigation, useRoute } from "@react-navigation/native";
 import Logo from "@/components/ui/Logo";
 import { ActivityIndicator } from "react-native";
 import {Chat, Message } from '@/types/Firestore';
-import { createChat, addMessage } from "../utils/Chat";
+import { createChat, addMessage, getChats } from "../utils/Chat";
 
 
 const OPENAI_API_KEY =
@@ -399,7 +399,6 @@ const ChatScreen = () => {
       </View>
     );
   };
-  
 
   return (
     <KeyboardAvoidingView
@@ -426,9 +425,9 @@ const ChatScreen = () => {
           renderItem={renderItem}
           keyExtractor={(item) => item.id}
           style={styles.chatBox}
-          onContentSizeChange={() => !isUserScrolling && scrollToBottom()} // Scroll when new content is added
-          onLayout={() => !isUserScrolling && scrollToBottom()} // Scroll when layout updates
-          onScrollBeginDrag={() => setIsUserScrolling(true)} // Stop auto-scroll when user starts scrolling
+          onContentSizeChange={() => !isUserScrolling && scrollToBottom()} 
+          onLayout={() => !isUserScrolling && scrollToBottom()} 
+          onScrollBeginDrag={() => setIsUserScrolling(true)} 
           onMomentumScrollEnd={() => setIsUserScrolling(false)} // Re-enable auto-scroll when user stops
           keyboardShouldPersistTaps="handled"
         />
