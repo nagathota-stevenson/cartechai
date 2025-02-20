@@ -7,21 +7,58 @@ import {
   Image,
   FlatList,
 } from "react-native";
-import {
-  DrawerContentScrollView,
-  DrawerItemList,
-} from "@react-navigation/drawer";
+
 import { useNavigation, DrawerActions } from "@react-navigation/native";
 import { Icon } from "react-native-elements";
 import { getAuth, signOut } from "firebase/auth";
 import { app } from "../config/firebaseConfig";
 import Logo from "./ui/Logo";
-import { getChats } from "../utils/Chat"; // Adjust the import path accordingly
+import { getChats } from "../utils/Chat"; 
+
+
+const categorizeChats = (chats) => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // Reset to start of the day
+
+  const categorizedChats = {
+    Today: [],
+    Yesterday: [],
+    "3 days ago": [],
+    "4 days ago": [],
+    "5 days ago": [],
+    "6 days ago": [],
+    "Last Week": [],
+  };
+
+  chats.forEach((chat) => {
+    if (!chat.created_at) return;
+
+    // Convert Firestore Timestamp to JavaScript Date
+    const chatDate = chat.created_at.toDate(); // Firestore Timestamp -> JS Date
+    chatDate.setHours(0, 0, 0, 0); // Normalize to start of the day
+
+    const diffInDays = Math.floor((today - chatDate) / (1000 * 60 * 60 * 24));
+
+    if (diffInDays === 0) {
+      categorizedChats.Today.push(chat);
+    } else if (diffInDays === 1) {
+      categorizedChats.Yesterday.push(chat);
+    } else if (diffInDays >= 2 && diffInDays <= 6) {
+      categorizedChats[`${diffInDays} days ago`].push(chat);
+    } else {
+      categorizedChats["Last Week"].push(chat);
+    }
+  });
+
+  return categorizedChats;
+};
+
+
 
 const CustomDrawer = (props) => {
   const navigation = useNavigation();
   const auth = getAuth(app);
-  const user = auth.currentUser; // Get the current user
+  const user = auth.currentUser;
   const [chats, setChats] = useState([]);
   const [activeChatId, setActiveChatId] = useState(null);
 
@@ -34,30 +71,19 @@ const CustomDrawer = (props) => {
     fetchChats();
   }, []);
 
-  const handleLogout = async () => {
-    try {
-      await signOut(auth);
-      navigation.dispatch(DrawerActions.closeDrawer());
-    } catch (error) {
-      console.error("Logout error:", error);
-    }
-  };
+  const categorizedChats = categorizeChats(chats);
 
-  // Access the current route from props.state
   const currentRoute = props.state?.routes[props.state.index]?.name;
-
-  // Check if the current route is the Community screen
   const isCommunityScreen = currentRoute === "CommunityScreen";
   const isHomeScreen = currentRoute === "Home";
 
-  // Header component for FlatList
   const renderHeader = () => (
     <View>
       <Logo />
       <TouchableOpacity
         style={[
           styles.communityButton,
-          isHomeScreen && styles.activeButton, // Apply active style if on Home screen
+          isHomeScreen && styles.activeButton,
         ]}
         onPress={() => navigation.navigate("Home")}
       >
@@ -68,16 +94,13 @@ const CustomDrawer = (props) => {
       <TouchableOpacity
         style={[
           styles.communityButton,
-          isCommunityScreen && styles.activeButton, // Apply active style if on Community screen
+          isCommunityScreen && styles.activeButton,
         ]}
         onPress={() => navigation.navigate("CommunityScreen")}
       >
         <Icon name="people" type="material" color="#fff" size={24} />
         <Text style={styles.communityButtonText}>Community</Text>
       </TouchableOpacity>
-      {/* <View style={styles.sectionTitleContainer}>
-        <Icon name="auto-awesome" type="material" color="#FFD700" size={16} />
-      </View> */}
       <View
         style={[
           { borderBottomColor: "#444", borderBottomWidth: 1.5, marginVertical: 16 },
@@ -86,37 +109,43 @@ const CustomDrawer = (props) => {
     </View>
   );
 
-  const renderFooter = () => (
-    <View>
-      <DrawerItemList {...props} />
-    </View>
-  );
+  // Render a section of chats
+  const renderSection = (title, data) => {
+    if (data.length === 0) return null; 
 
-  return (
-    <View style={styles.container}>
-      <FlatList
-        data={chats}
-        keyExtractor={(item) => item.id}
-        ListHeaderComponent={renderHeader}
-        ListFooterComponent={renderFooter}
-        renderItem={({ item }) => {
-          console.log("Current Route:", currentRoute);
+    return (
+      <View key={title} style={title !== "Today" ? styles.sectionContainer : null}>
+        <Text style={styles.sectionTitle}>{title}</Text>
+        {data.map((item) => {
           const isActive = activeChatId === item.id && currentRoute === "ChatScreen";
           return (
             <TouchableOpacity
+              key={item.id}
               style={[
                 styles.chatItemButton,
                 isActive ? styles.activeChatItem : null,
               ]}
               onPress={() => {
-                setActiveChatId(item.id); 
-                navigation.navigate("ChatScreen", { chatId: item.id, carDetails: item.carDetails }); 
+                setActiveChatId(item.id);
+                navigation.navigate("ChatScreen", { chatId: item.id, carDetails: item.carDetails });
               }}
             >
               <Text style={styles.chatText}>{item.carDetails}</Text>
             </TouchableOpacity>
           );
-        }}
+        })}
+      </View>
+    );
+  };
+  
+
+  return (
+    <View style={styles.container}>
+      <FlatList
+        data={Object.entries(categorizedChats)}
+        keyExtractor={([title]) => title}
+        ListHeaderComponent={renderHeader}
+        renderItem={({ item: [title, data] }) => renderSection(title, data)}
       />
 
       {/* User Profile Section */}
@@ -132,8 +161,8 @@ const CustomDrawer = (props) => {
           }}
           style={styles.profileImage}
         />
-        <Text style={styles.profileName}>
-          {user?.displayName || "Stevenson Nagathota"}
+        <Text style={styles.profileName} numberOfLines={1} ellipsizeMode="tail">
+          {user?.email || " "}
         </Text>
         <Icon name="more-horiz" type="material" color="#fff" size={24} />
       </TouchableOpacity>
@@ -147,6 +176,11 @@ const styles = StyleSheet.create({
     paddingTop: 48,
     paddingHorizontal: 16,
     backgroundColor: "#1a1c1b",
+  },
+  sectionContainer: {
+    borderTopWidth: 1.5,
+    borderTopColor: "#444",
+    marginTop: 16,
   },
   // Community Button Styles
   communityButton: {
@@ -215,6 +249,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     color: "#95ff77",
+    padding: 16,
     fontFamily: "Aeonik",
   },
 });

@@ -83,7 +83,7 @@ export default function CarDetailsScreen() {
         }, {} as CarDetails);
 
         setCarDetails(carDetails);
-        console.log('Car Details from Car Details Screen:', carDetails);
+       
       } else {
         setError('No vehicle details found for the given VIN.');
       }

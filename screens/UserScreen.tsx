@@ -41,9 +41,9 @@ export default function UserScreen() {
             style={styles.profileImage}
           />
           <Text style={styles.profileName}>
-            {user?.displayName || "Stevenson Nagathota"}
+            {user?.email || ""}
           </Text>
-          <Text style={styles.profileEmail}>{user?.email || "No email"}</Text>
+          
         </View>
 
         <CustomButton

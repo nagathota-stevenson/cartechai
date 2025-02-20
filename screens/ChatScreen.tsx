@@ -15,7 +15,7 @@ import { Icon } from "react-native-elements";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import Logo from "@/components/ui/Logo";
 import { ActivityIndicator } from "react-native";
-import { Chat, Message } from "@/types/Firestore";
+import  RenderChat  from "@/utils/RenderChat";
 import {
   createChat,
   addMessage,
@@ -40,10 +40,10 @@ const ChatScreen = () => {
   const [chatId, setChatId] = useState(null);
   const carName = `${carDetails?.make} ${carDetails?.model} - ${carDetails?.modelYear}`;
 
-  console.log("chatId: ", chatId);
+
 
   useEffect(() => {
-    console.log("Messages updated:", messages);
+   
   }, [messages]);
 
   useEffect(() => {
@@ -52,13 +52,19 @@ const ChatScreen = () => {
         const createdChatId = await createChat(carName);
         if (createdChatId) {
           setChatId(createdChatId);
-          setMessages([
-            {
-              id: "1",
-              text: `Hello! I am CarTechAI. How can I assist you with your car:\n${carDetails?.make} ${carDetails?.model} - ${carDetails?.modelYear}?`,
-              sender: "bot",
-            },
-          ]);
+  
+          // First message from bot
+          const firstMessage = {
+            sender: "bot",
+            message: `Hello! I am CarTechAI. How can I assist you with your car:\n${carDetails?.make} ${carDetails?.model} - ${carDetails?.modelYear}?`,
+            timestamp: new Date(), // Optional: Firestore uses serverTimestamp() automatically
+          };
+  
+          // Save message to Firestore
+          const messageId = await addMessage(createdChatId, firstMessage.sender, firstMessage.message);
+          if (messageId) {
+            setMessages([{ id: messageId, ...firstMessage }]);
+          }
         }
       } else if (route.params.chatId) {
         setChatId(route.params.chatId);
@@ -66,8 +72,10 @@ const ChatScreen = () => {
         setMessages(fetchedMessages);
       }
     };
+  
     initChat();
-  }, [chatId, route.params.chatId]); // Re-run when chatId or route.params.chatId changes
+  }, [chatId, route.params.chatId]);
+  
 
   const [inputText, setInputText] = useState("");
   const [isTyping, setIsTyping] = useState(false);
@@ -480,7 +488,9 @@ const ChatScreen = () => {
         <FlatList
           ref={flatListRef}
           data={messages}
-          renderItem={renderItem}
+          renderItem={({ item }) => (
+            <RenderChat item={item} loadingStates={loadingStates} setLoadingStates={setLoadingStates} />
+          )}
           keyExtractor={(item) => item.id}
           style={styles.chatBox}
           onContentSizeChange={() => !isUserScrolling && scrollToBottom()}

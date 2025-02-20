@@ -59,7 +59,7 @@ const CommunityScreen = () => {
   };
 
   const handleSearch = () => {
-    console.log("Search Text:", searchText); 
+   
     fetchPosts(searchText.trim());
   };
 

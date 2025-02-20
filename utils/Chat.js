@@ -105,7 +105,7 @@ export const getMessagesByChatId = async (chatId) => {
       ...doc.data(),
     }));
 
-    console.log("Messages:", messages);
+   
 
     return messages;
   } catch (error) {
