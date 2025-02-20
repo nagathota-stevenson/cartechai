@@ -46,7 +46,7 @@ export default function EnterCarDetailsScreen() {
   };
 
   const goToChat = () => {
-    navigation.navigate("ChatScreen", { carDetails });
+    navigation.navigate("ChatScreen", { carDetails: carDetails });
   };
 
   return (

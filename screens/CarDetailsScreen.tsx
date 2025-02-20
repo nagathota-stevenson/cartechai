@@ -12,7 +12,10 @@ export default function CarDetailsScreen() {
   const navigation = useNavigation();
   const [carDetails, setCarDetails] = useState<CarDetails | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null); // For handling errors
+  const [error, setError] = useState<string | null>(null); 
+
+
+
 
   const handleVinSubmission = async () => {
     if (!vin.trim()) {
@@ -80,6 +83,7 @@ export default function CarDetailsScreen() {
         }, {} as CarDetails);
 
         setCarDetails(carDetails);
+        console.log('Car Details from Car Details Screen:', carDetails);
       } else {
         setError('No vehicle details found for the given VIN.');
       }
@@ -91,7 +95,7 @@ export default function CarDetailsScreen() {
   };
 
   const goToChat = () => {
-    navigation.navigate('ChatScreen', { carDetails });
+    navigation.navigate("ChatScreen", { carDetails: carDetails });
   }
 
   useEffect(() => {

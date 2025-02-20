@@ -15,9 +15,13 @@ import { Icon } from "react-native-elements";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import Logo from "@/components/ui/Logo";
 import { ActivityIndicator } from "react-native";
-import {Chat, Message } from '@/types/Firestore';
-import { createChat, addMessage, getChats } from "../utils/Chat";
-
+import { Chat, Message } from "@/types/Firestore";
+import {
+  createChat,
+  addMessage,
+  getChats,
+  getMessagesByChatId,
+} from "../utils/Chat";
 
 const OPENAI_API_KEY =
   "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";
@@ -29,30 +33,42 @@ const ChatScreen = () => {
   const navigation = useNavigation();
   const flatListRef = useRef(null); // Reference to FlatList
   const route = useRoute();
-  const { carDetails } = route.params || {};
+  const carDetails = route.params.carDetails || {};
+  const [messages, setMessages] = useState([]);
   const [conversationHistory, setConversationHistory] = useState([]); // Stores all messages
   const [isUserScrolling, setIsUserScrolling] = useState(false);
   const [chatId, setChatId] = useState(null);
+  const carName = `${carDetails?.make} ${carDetails?.model} - ${carDetails?.modelYear}`;
+
+  console.log("chatId: ", chatId);
+
+  useEffect(() => {
+    console.log("Messages updated:", messages);
+  }, [messages]);
 
   useEffect(() => {
     const initChat = async () => {
-      if (!chatId) {  
-        const createdChatId = await createChat();
+      if (!chatId && !route.params.chatId) {
+        const createdChatId = await createChat(carName);
         if (createdChatId) {
           setChatId(createdChatId);
+          setMessages([
+            {
+              id: "1",
+              text: `Hello! I am CarTechAI. How can I assist you with your car:\n${carDetails?.make} ${carDetails?.model} - ${carDetails?.modelYear}?`,
+              sender: "bot",
+            },
+          ]);
         }
+      } else if (route.params.chatId) {
+        setChatId(route.params.chatId);
+        const fetchedMessages = await getMessagesByChatId(route.params.chatId);
+        setMessages(fetchedMessages);
       }
     };
     initChat();
-  }, [chatId]);
+  }, [chatId, route.params.chatId]); // Re-run when chatId or route.params.chatId changes
 
-  const [messages, setMessages] = useState([
-    {
-      id: "1",
-      text: `Hello! I am CarTechAI. How can I assist you with your car:\n${carDetails?.make} ${carDetails?.model} - ${carDetails?.modelYear}?`,
-      sender: "bot",
-    },
-  ]);
   const [inputText, setInputText] = useState("");
   const [isTyping, setIsTyping] = useState(false);
 
@@ -104,7 +120,6 @@ const ChatScreen = () => {
     return [];
   };
 
-  
   const scrollToBottom = () => {
     if (flatListRef.current) {
       setTimeout(() => {
@@ -132,7 +147,6 @@ const ChatScreen = () => {
       text: inputText,
       sender: "user",
     };
-  
 
     setMessages((prevMessages) => [...prevMessages, newMessage]);
     setConversationHistory((prevHistory) => [...prevHistory, newMessage]); // Store in history
@@ -199,7 +213,7 @@ const ChatScreen = () => {
         );
 
         await addMessage(chatId, "CarTechAI", aiResponse, images, youtubeVideo);
-        
+
         // Typewriter effect for AI response
         const typeWriterEffect = (text, callback, completeCallback) => {
           let index = 0;
@@ -248,15 +262,16 @@ const ChatScreen = () => {
                   : msg
               )
             );
-            
           }
-
         );
-       
       } catch (error) {
         console.error("Error fetching AI response:", error);
-        await addMessage(chatId, "CarTechAI", "Error: Unable to get a response. Please try again.");
-        
+        await addMessage(
+          chatId,
+          "CarTechAI",
+          "Error: Unable to get a response. Please try again."
+        );
+
         setMessages((prevMessages) => [
           ...prevMessages.filter((msg) => msg.id !== "typing"),
           {
@@ -297,15 +312,24 @@ const ChatScreen = () => {
     const emojiPattern = /(\p{Emoji_Presentation}|\p{Extended_Pictographic})/gu;
   
     // Process text for links, bold text, and images
-    const textWithMedia = item.text.split(urlPattern).map((part, index) => {
+    const textWithMedia = (item.text || item.message || "").split(urlPattern).map((part, index) => {
       if (imagePattern.test(part)) {
         const match = part.match(imagePattern);
         if (match) {
           const cleanImageUrl = match[1];
           return (
-            <TouchableOpacity key={index} onPress={() => Linking.openURL(cleanImageUrl)}>
+            <TouchableOpacity
+              key={index}
+              onPress={() => Linking.openURL(cleanImageUrl)}
+            >
               <View>
-                {imageLoading && <ActivityIndicator size="small" color="#00ff00" style={styles.loadingIndicator} />}
+                {imageLoading && (
+                  <ActivityIndicator
+                    size="small"
+                    color="#00ff00"
+                    style={styles.loadingIndicator}
+                  />
+                )}
                 <Image
                   source={{ uri: cleanImageUrl }}
                   style={styles.chatImage}
@@ -317,13 +341,21 @@ const ChatScreen = () => {
         }
       } else if (pdfPattern.test(part)) {
         return (
-          <TouchableOpacity key={index} style={styles.linkContainer} onPress={() => Linking.openURL(part)}>
+          <TouchableOpacity
+            key={index}
+            style={styles.linkContainer}
+            onPress={() => Linking.openURL(part)}
+          >
             <Text style={[styles.link, styles.boldText]}>📄 Open PDF</Text>
           </TouchableOpacity>
         );
       } else if (urlPattern.test(part)) {
         return (
-          <TouchableOpacity key={index} style={styles.linkContainer} onPress={() => Linking.openURL(part)}>
+          <TouchableOpacity
+            key={index}
+            style={styles.linkContainer}
+            onPress={() => Linking.openURL(part)}
+          >
             <Text style={styles.link}>{part}</Text>
           </TouchableOpacity>
         );
@@ -350,21 +382,38 @@ const ChatScreen = () => {
     });
   
     return (
-      <View style={[styles.messageContainer, item.sender === "user" ? styles.userMessage : styles.botMessage]}>
+      <View
+        style={[
+          styles.messageContainer,
+          item.sender === "user" ? styles.userMessage : styles.botMessage,
+        ]}
+      >
+        {/* Render processed text with media */}
         {textWithMedia}
   
         {/* Display YouTube video with clickable link and thumbnail */}
         {item.youtubeVideo && (
           <View style={styles.youtubeContainer}>
             {/* Clickable YouTube Link */}
-            <TouchableOpacity onPress={() => Linking.openURL(item.youtubeVideo.link)}>
+            <TouchableOpacity
+              onPress={() => Linking.openURL(item.youtubeVideo.link)}
+            >
               <Text style={styles.link}>▶ {item.youtubeVideo.title}</Text>
             </TouchableOpacity>
   
             {/* Clickable YouTube Thumbnail with Loading Animation */}
-            <TouchableOpacity onPress={() => Linking.openURL(item.youtubeVideo.link)} style={styles.youtubeThumbnailContainer}>
+            <TouchableOpacity
+              onPress={() => Linking.openURL(item.youtubeVideo.link)}
+              style={styles.youtubeThumbnailContainer}
+            >
               <View>
-                {thumbnailLoading && <ActivityIndicator size="small" color="#FF0000" style={styles.loadingIndicator} />}
+                {thumbnailLoading && (
+                  <ActivityIndicator
+                    size="small"
+                    color="#FF0000"
+                    style={styles.loadingIndicator}
+                  />
+                )}
                 <Image
                   source={{ uri: item.youtubeVideo.thumbnail }}
                   style={styles.youtubeThumbnail}
@@ -383,9 +432,18 @@ const ChatScreen = () => {
         {item.images?.length > 0 && (
           <View style={styles.imageContainer}>
             {item.images.map((img, index) => (
-              <TouchableOpacity key={index} onPress={() => Linking.openURL(img)}>
+              <TouchableOpacity
+                key={index}
+                onPress={() => Linking.openURL(img)}
+              >
                 <View>
-                  {imageLoading && <ActivityIndicator size="small" color="#00ff00" style={styles.loadingIndicator} />}
+                  {imageLoading && (
+                    <ActivityIndicator
+                      size="small"
+                      color="#00ff00"
+                      style={styles.loadingIndicator}
+                    />
+                  )}
                   <Image
                     source={{ uri: img }}
                     style={styles.chatImage}
@@ -425,9 +483,9 @@ const ChatScreen = () => {
           renderItem={renderItem}
           keyExtractor={(item) => item.id}
           style={styles.chatBox}
-          onContentSizeChange={() => !isUserScrolling && scrollToBottom()} 
-          onLayout={() => !isUserScrolling && scrollToBottom()} 
-          onScrollBeginDrag={() => setIsUserScrolling(true)} 
+          onContentSizeChange={() => !isUserScrolling && scrollToBottom()}
+          onLayout={() => !isUserScrolling && scrollToBottom()}
+          onScrollBeginDrag={() => setIsUserScrolling(true)}
           onMomentumScrollEnd={() => setIsUserScrolling(false)} // Re-enable auto-scroll when user stops
           keyboardShouldPersistTaps="handled"
         />
@@ -534,7 +592,6 @@ const styles = StyleSheet.create({
     padding: 10,
     marginVertical: 5,
     borderRadius: 16,
-    
   },
   userMessage: {
     fontFamily: "Aeonik",
