@@ -30,12 +30,13 @@ const categorizeChats = (chats) => {
     "Last Week": [],
   };
 
+  if (!chats) return categorizedChats; 
+
   chats.forEach((chat) => {
     if (!chat.created_at) return;
 
-    // Convert Firestore Timestamp to JavaScript Date
-    const chatDate = chat.created_at.toDate(); // Firestore Timestamp -> JS Date
-    chatDate.setHours(0, 0, 0, 0); // Normalize to start of the day
+    const chatDate = chat.created_at.toDate(); 
+    chatDate.setHours(0, 0, 0, 0); 
 
     const diffInDays = Math.floor((today - chatDate) / (1000 * 60 * 60 * 24));
 
@@ -44,7 +45,10 @@ const categorizeChats = (chats) => {
     } else if (diffInDays === 1) {
       categorizedChats.Yesterday.push(chat);
     } else if (diffInDays >= 2 && diffInDays <= 6) {
-      categorizedChats[`${diffInDays} days ago`].push(chat);
+      const key = `${diffInDays} days ago`;
+      if (categorizedChats[key]) {
+        categorizedChats[key].push(chat);
+      }
     } else {
       categorizedChats["Last Week"].push(chat);
     }
@@ -52,8 +56,6 @@ const categorizeChats = (chats) => {
 
   return categorizedChats;
 };
-
-
 
 const CustomDrawer = (props) => {
   const navigation = useNavigation();
@@ -78,66 +80,66 @@ const CustomDrawer = (props) => {
   const isHomeScreen = currentRoute === "Home";
 
   const renderHeader = () => (
-    <View>
-      <Logo />
-      <TouchableOpacity
-        style={[
-          styles.communityButton,
-          isHomeScreen && styles.activeButton,
-        ]}
-        onPress={() => navigation.navigate("Home")}
-      >
-        <Icon name="chat" type="material" color="#fff" size={24} />
-        <Text style={styles.communityButtonText}>New Chat</Text>
-      </TouchableOpacity>
+  <View>
+    <Logo />
+    <TouchableOpacity
+      style={[
+        styles.communityButton,
+        isHomeScreen && styles.activeButton,
+      ]}
+      onPress={() => navigation.navigate("Home")}
+    >
+      <Icon name="chat" type="material" color="#fff" size={24} />
+      <Text style={styles.communityButtonText}>New Chat</Text>
+    </TouchableOpacity>
 
-      <TouchableOpacity
-        style={[
-          styles.communityButton,
-          isCommunityScreen && styles.activeButton,
-        ]}
-        onPress={() => navigation.navigate("CommunityScreen")}
-      >
-        <Icon name="people" type="material" color="#fff" size={24} />
-        <Text style={styles.communityButtonText}>Community</Text>
-      </TouchableOpacity>
+    <TouchableOpacity
+      style={[
+        styles.communityButton,
+        isCommunityScreen && styles.activeButton,
+      ]}
+      onPress={() => navigation.navigate("CommunityScreen")}
+    >
+      <Icon name="people" type="material" color="#fff" size={24} />
+      <Text style={styles.communityButtonText}>Community</Text>
+    </TouchableOpacity>
+  </View>
+);
+
+// Render a section of chats
+const renderSection = (title, data) => {
+  if (data.length === 0) return null; 
+  return (
+    <View key={title}>
       <View
-        style={[
-          { borderBottomColor: "#444", borderBottomWidth: 1.5, marginVertical: 16 },
-        ]}
-      ></View>
+          style={{
+            borderTopWidth: 1.5,
+            borderTopColor: "#444",
+            marginTop: 16,
+          }}
+        />
+      <Text style={styles.sectionTitle}>{title}</Text>
+      {data.map((item) => {
+        const isActive = activeChatId === item.id && currentRoute === "ChatScreen";
+        return (
+          <TouchableOpacity
+            key={item.id}
+            style={[
+              styles.chatItemButton,
+              isActive ? styles.activeChatItem : null,
+            ]}
+            onPress={() => {
+              setActiveChatId(item.id);
+              navigation.navigate("ChatScreen", { chatId: item.id, carDetails: item.carDetails });
+            }}
+          >
+            <Text style={styles.chatText}>{item.carDetails}</Text>
+          </TouchableOpacity>
+        );
+      })}
     </View>
   );
-
-  // Render a section of chats
-  const renderSection = (title, data) => {
-    if (data.length === 0) return null; 
-
-    return (
-      <View key={title} style={title !== "Today" ? styles.sectionContainer : null}>
-        <Text style={styles.sectionTitle}>{title}</Text>
-        {data.map((item) => {
-          const isActive = activeChatId === item.id && currentRoute === "ChatScreen";
-          return (
-            <TouchableOpacity
-              key={item.id}
-              style={[
-                styles.chatItemButton,
-                isActive ? styles.activeChatItem : null,
-              ]}
-              onPress={() => {
-                setActiveChatId(item.id);
-                navigation.navigate("ChatScreen", { chatId: item.id, carDetails: item.carDetails });
-              }}
-            >
-              <Text style={styles.chatText}>{item.carDetails}</Text>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
-    );
-  };
-  
+};
 
   return (
     <View style={styles.container}>
@@ -188,8 +190,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 16,
     paddingHorizontal: 16,
-
     borderRadius: 16,
+
   },
   activeButton: {
     backgroundColor: "#2a2e2e", // Background color when active

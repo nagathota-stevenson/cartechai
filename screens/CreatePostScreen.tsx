@@ -12,6 +12,7 @@ import { useNavigation } from "@react-navigation/native";
 import { Icon } from "react-native-elements";
 import { getFirestore, collection, addDoc } from "firebase/firestore";
 import Logo from "@/components/ui/Logo";
+import { auth } from "@/config/firebaseConfig";
 
 const CreatePostScreen = () => {
   const navigation = useNavigation();
@@ -31,6 +32,7 @@ const CreatePostScreen = () => {
       title,
       title_lowercase: title.toLowerCase(), // Add lowercase version of the title
       description,
+      user_id: auth.currentUser!.uid,
       status: "open", // Default status is open
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
@@ -56,7 +58,7 @@ const CreatePostScreen = () => {
           <Logo />
         </View>
       </View>
-
+     
       {/* Input Fields */}
       <TextInput
         style={styles.input}
@@ -107,6 +109,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#2a2e2e",
     color: "#fff",
     fontSize: 16,
+    fontFamily: "Aeonik",
     padding: 14,
     borderRadius: 10,
     marginBottom: 12,
@@ -118,6 +121,7 @@ const styles = StyleSheet.create({
   submitButton: {
     backgroundColor: "#95ff77",
     paddingVertical: 14,
+  
     borderRadius: 10,
     alignItems: "center",
     marginTop: 10,
@@ -125,10 +129,11 @@ const styles = StyleSheet.create({
   submitButtonText: {
     fontSize: 16,
     color: "#1a1c1b",
-   
+    fontFamily: "Aeonik",
   },
   cancelButton: {
     backgroundColor: "#2a2e2e",
+    
     paddingVertical: 14,
     borderRadius: 10,
     alignItems: "center",
@@ -136,6 +141,7 @@ const styles = StyleSheet.create({
   },
   cancelButtonText: {
     fontSize: 16,
+    fontFamily: "Aeonik",
     color: "#fff",
     
   },

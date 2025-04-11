@@ -40,9 +40,10 @@ const PostDetailsScreen = () => {
   useEffect(() => {
     fetchPostDetails();
     fetchResponses();
-  }, []);
+  }, [postId]); // Add postId as a dependency
 
   const fetchPostDetails = async () => {
+    setLoading(true); // Set loading to true when fetching new data
     try {
       const docRef = doc(db, "community_posts", postId);
       const docSnap = await getDoc(docRef);
@@ -88,7 +89,7 @@ const PostDetailsScreen = () => {
         votes: 0, // Default vote count
       });
       setResponseText("");
-      fetchResponses();
+      fetchResponses(); // Refresh responses after adding a new one
     } catch (error) {
       console.error("Error adding response:", error);
       Alert.alert("Error", "Could not add response.");
@@ -97,27 +98,40 @@ const PostDetailsScreen = () => {
     }
   };
 
-  const handleAcceptResponse = async (responseId) => {
+  const handleAcceptResponse = async (responseId: string) => {
     if (!post || post.user_id !== user.uid) return;
     try {
       await updateDoc(doc(db, "community_responses", responseId), { is_accepted: true });
       await updateDoc(doc(db, "community_posts", postId), { status: "closed" });
-      fetchResponses();
-      fetchPostDetails();
+      fetchResponses(); // Refresh responses after accepting
+      fetchPostDetails(); // Refresh post details after accepting
       Alert.alert("Success", "Response accepted and post closed.");
     } catch (error) {
       console.error("Error accepting response:", error);
     }
   };
 
-  const handleVote = async (responseId, type) => {
+  const handleVote = async (responseId: string, type: string) => {
     try {
       const responseRef = doc(db, "community_responses", responseId);
-      await updateDoc(responseRef, { votes: increment(type === "upvote" ? 1 : -1) });
-      fetchResponses();
+      await updateDoc(responseRef, { votes: increment(type === "like" ? 1 : -1) });
+      fetchResponses(); // Refresh responses after voting
     } catch (error) {
       console.error("Error updating votes:", error);
     }
+  };
+
+  // Function to format the response date
+  const formatDate = (timestamp: string | number | Date) => {
+    if (!timestamp) return "Unknown";
+    const date = new Date(timestamp);
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   };
 
   if (loading) return <ActivityIndicator size="large" color="#95ff77" style={styles.loader} />;
@@ -126,19 +140,23 @@ const PostDetailsScreen = () => {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Icon name="arrow-back" type="material" color="#fff" size={24} />
+        <View style={styles.logoWrapper}>
+          <Logo />
+        </View>
+        <TouchableOpacity onPress={() => navigation.navigate("CommunityScreen")} style={styles.closeButton}>
+          <Icon name="close" type="material" color="#fff" size={24} />
         </TouchableOpacity>
-        <Logo />
       </View>
 
-      {/* Post Details */}
-      <View style={styles.postContainer}>
+      {/* Post Content */}
+      <View style={styles.postContent}>
         <Text style={styles.postTitle}>{post?.title}</Text>
         <Text style={styles.postDescription}>{post?.description}</Text>
-        <Text style={styles.postStatus}>
-          Status: {post?.status.charAt(0).toUpperCase() + post?.status.slice(1)}
-        </Text>
+        <View style={styles.postStatusContainer}>
+          <Text style={styles.postStatus}>
+            {post?.status.toUpperCase()}
+          </Text>
+        </View>
       </View>
 
       {/* Responses List */}
@@ -146,21 +164,35 @@ const PostDetailsScreen = () => {
         data={responses}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <View style={[styles.responseCard, item.is_accepted && styles.acceptedResponse]}>
-            {/* Voting System */}
-            <View style={styles.voteContainer}>
-              <TouchableOpacity onPress={() => handleVote(item.id, "upvote")}>
-                <Icon name="arrow-upward" type="material" color="#fff" size={20} />
-              </TouchableOpacity>
-              <Text style={styles.voteCount}>{item.votes || 0}</Text>
-              <TouchableOpacity onPress={() => handleVote(item.id, "downvote")}>
-                <Icon name="arrow-downward" type="material" color="#fff" size={20} />
-              </TouchableOpacity>
-            </View>
-
+          <View style={styles.responseCard}>
             {/* Response Content */}
             <View style={styles.responseContent}>
+              {/* Poster Info and Date */}
+              <View style={styles.responseHeader}>
+                <Text style={styles.posterName}>
+                  {item.displayName || "Anonymous"}
+                </Text>
+                <Text style={styles.postedDate}>
+                  {formatDate(item.created_at)}
+                </Text>
+              </View>
+
+              {/* Response Text */}
               <Text style={styles.responseText}>{item.message}</Text>
+
+              {/* Like and Dislike Buttons */}
+              <View style={styles.voteContainer}>
+                <TouchableOpacity
+                  style={styles.likeButton}
+                  onPress={() => handleVote(item.id, "like")}
+                >
+                  <Icon name="thumb-up" type="material" color="#95ff77" size={24} />
+                  <Text style={styles.voteText}>Like</Text>
+                </TouchableOpacity>
+                <Text style={styles.voteCount}>{item.votes || 0} likes</Text>
+              </View>
+
+              {/* Accept Button (for post owner) */}
               {post.user_id === user.uid && !item.is_accepted && post.status === "open" && (
                 <TouchableOpacity
                   style={styles.acceptButton}
@@ -169,11 +201,18 @@ const PostDetailsScreen = () => {
                   <Text style={styles.acceptButtonText}>Accept</Text>
                 </TouchableOpacity>
               )}
-              {item.is_accepted && <Text style={styles.acceptedLabel}>Accepted</Text>}
+
+              {/* Accepted Badge */}
+              {item.is_accepted && (
+                <View style={styles.acceptedBadge}>
+                  <Text style={styles.acceptedLabel}>ACCEPTED</Text>
+                </View>
+              )}
             </View>
           </View>
         )}
         ListEmptyComponent={<Text style={styles.noResponsesText}>No responses yet.</Text>}
+        contentContainerStyle={styles.flatListContent}
       />
 
       {/* Add Response Input */}
@@ -203,59 +242,103 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "center",
     alignItems: "center",
-    marginBottom: 16,
+    marginTop: 36,
+    marginBottom: 8,
+    position: "relative",
   },
-  backButton: {
+  logoWrapper: {
+    alignItems: "center",
+  },
+  closeButton: {
+    position: "absolute",
+    right: 0,
     padding: 10,
     backgroundColor: "#2a2e2e",
-    borderRadius: 10,
+    borderRadius: 12,
   },
-  postContainer: {
-    backgroundColor: "#2a2e2e",
-    padding: 16,
-    borderRadius: 10,
-    marginBottom: 16,
+  postContent: {
+    marginBottom: 24,
   },
   postTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
+    fontSize: 24,
     color: "#fff",
+    fontFamily: "Aeonik",
     marginBottom: 8,
   },
   postDescription: {
     fontSize: 16,
     color: "#ddd",
-    marginBottom: 8,
+    fontFamily: "Aeonik",
+    marginBottom: 16,
+  },
+  postStatusContainer: {
+    backgroundColor: "#95ff77",
+    borderRadius: 16,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    alignSelf: "flex-start",
   },
   postStatus: {
-    fontSize: 14,
-    color: "#95ff77",
+    fontSize: 12,
+    color: "#1a1c1b",
+    fontFamily: "Aeonik",
+    textTransform: "uppercase",
   },
   responseCard: {
-    flexDirection: "row",
     backgroundColor: "#2a2e2e",
     padding: 16,
-    borderRadius: 10,
-    marginBottom: 8,
-  },
-  voteContainer: {
-    alignItems: "center",
-    marginRight: 16,
-  },
-  voteCount: {
-    color: "#fff",
-    fontSize: 16,
-    marginVertical: 8,
+    borderRadius: 16,
+    marginBottom: 16,
   },
   responseContent: {
     flex: 1,
   },
+  responseHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  posterName: {
+    fontSize: 16,
+    color: "#95ff77",
+    fontFamily: "Aeonik",
+  },
+  postedDate: {
+    fontSize: 12,
+    color: "#aaa",
+    fontFamily: "Aeonik",
+  },
   responseText: {
     fontSize: 16,
     color: "#fff",
-    marginBottom: 8,
+    fontFamily: "Aeonik",
+    marginBottom: 12,
+  },
+  voteContainer: {
+    alignSelf: "flex-end",
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  likeButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginRight: 16,
+  },
+  
+  voteText: {
+    fontSize: 16,
+    color: "#fff",
+    fontFamily: "Aeonik",
+    marginLeft: 4,
+  },
+  voteCount: {
+    fontSize: 16,
+    color: "#aaa",
+    fontFamily: "Aeonik",
   },
   acceptButton: {
     backgroundColor: "#95ff77",
@@ -264,37 +347,52 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   acceptButtonText: {
-    fontSize: 14,
+    fontSize: 12,
     color: "#1a1c1b",
-    fontWeight: "bold",
+    fontFamily: "Aeonik",
+    textTransform: "uppercase",
+  },
+  acceptedBadge: {
+    backgroundColor: "#95ff77",
+    borderRadius: 16,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    alignSelf: "flex-start",
+    marginTop: 8,
   },
   acceptedLabel: {
-    fontSize: 14,
+    fontSize: 12,
     color: "#1a1c1b",
-    fontWeight: "bold",
-    marginTop: 8,
+    fontFamily: "Aeonik",
+    textTransform: "uppercase",
   },
   responseInputContainer: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#2a2e2e",
-    borderRadius: 10,
+    borderRadius: 16,
     paddingHorizontal: 16,
     paddingVertical: 8,
+    marginBottom: 16,
   },
   responseInput: {
     flex: 1,
     color: "#fff",
-    fontSize: 16,
+    fontSize: 14,
+    fontFamily: "Aeonik",
   },
   sendButton: {
     padding: 8,
   },
   noResponsesText: {
-    fontSize: 16,
+    fontSize: 14,
     color: "#aaa",
+    fontFamily: "Aeonik",
     textAlign: "center",
     marginTop: 16,
+  },
+  flatListContent: {
+    paddingBottom: 16,
   },
 });
 

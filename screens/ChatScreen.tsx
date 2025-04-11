@@ -91,6 +91,8 @@ const ChatScreen = () => {
         .filter(Boolean)
         .join(" ");
 
+      console.log(carDetails);
+
       const url = `https://serpapi.com/search.json?engine=youtube&search_query=${encodeURIComponent(
         searchQuery
       )}&gl=us&hl=en&api_key=${SERPAPI_KEY}`;
@@ -217,8 +219,10 @@ const ChatScreen = () => {
         );
 
         youtubeVideo = await fetchYoutubeVideosFromSerpAPI(
-          `${inputText} ${carDetails?.make} ${carDetails?.model} ${carDetails?.modelYear} repair video tutorial`
+          `${inputText} ${carDetails?.make} ${carDetails?.model} ${carDetails?.modelYear} videos`
         );
+
+        console.log(carDetails);
 
         await addMessage(chatId, "CarTechAI", aiResponse, images, youtubeVideo);
 
@@ -582,8 +586,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingTop: 50,
-    paddingHorizontal: 20,
-    paddingBottom: 15,
+    paddingHorizontal: 16,
+    paddingBottom: 16,
     backgroundColor: "#1a1c1b",
     alignItems: "center",
   },

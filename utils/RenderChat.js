@@ -10,7 +10,6 @@ import {
 } from "react-native";
 
 
-// Function to process text with media (Optimized)
 const processTextWithMedia = (text, item, handleImageLoad) => {
   const urlPattern = /(https?:\/\/[^\s]+)/g;
   const imagePattern = /(https?:\/\/[^\s)]+?\.(?:png|jpg|jpeg|gif))(?=[\s)]|$)/i;
@@ -97,12 +96,6 @@ const RenderChat = memo(({ item, loadingStates, setLoadingStates }) => {
 
 
 const styles = StyleSheet.create({
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    width: "100%",
-  },
   chatImage: {
     width: "100%",
     maxWidth: 300,
@@ -112,17 +105,6 @@ const styles = StyleSheet.create({
     marginTop: 5,
     alignSelf: "flex-start",
     resizeMode: "cover",
-  },
-
-  logo: {
-    flex: 1,
-    alignItems: "center",
-    paddingLeft: 16,
-  },
-
-  animation: {
-    width: 50,
-    height: 50,
   },
   youtubeContainer: {
     flexDirection: "column",
@@ -135,11 +117,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   youtubeThumbnail: {
-    width: "100%", // Makes it responsive
-    aspectRatio: 16 / 9, // Ensures proper YouTube thumbnail aspect ratio
+    width: "100%",
+    aspectRatio: 16 / 9,
     borderRadius: 8,
     marginTop: 5,
-    resizeMode: "cover", // Ensures the image covers the entire area
+    resizeMode: "cover",
   },
   youtubePlayButton: {
     position: "absolute",
@@ -157,25 +139,6 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 24,
     fontWeight: "bold",
-  },
-  container: {
-    flex: 1,
-    paddingTop: 50,
-    paddingHorizontal: 20,
-    paddingBottom: 15,
-    backgroundColor: "#1a1c1b",
-    alignItems: "center",
-  },
-  title: {
-    fontFamily: "Aeonik",
-    fontSize: 20,
-    color: "#fff",
-    marginTop: 8,
-    marginBottom: 8,
-  },
-  chatBox: {
-    flexGrow: 1,
-    width: "100%",
   },
   messageContainer: {
     padding: 10,
@@ -214,7 +177,7 @@ const styles = StyleSheet.create({
     padding: 10,
     marginVertical: 5,
     borderRadius: 16,
-    backgroundColor: "#95ff77", // Same color as bot messages
+    backgroundColor: "#95ff77",
     maxWidth: "80%",
   },
   linkContainer: {
@@ -224,36 +187,8 @@ const styles = StyleSheet.create({
     zIndex: 100,
     fontFamily: "Aeonik",
     fontSize: 16,
-    color: "#0066cc", // Blue color for links
-    textDecorationLine: "underline", // Underline for links
-  },
-  inputContainer: {
-    flexDirection: "column",
-    alignSelf: "flex-start",
-    height: 60,
-    borderColor: "#444",
-    marginBottom: 5,
-    marginTop: 10,
-    width: "100%",
-    position: "relative",
-  },
-  input: {
-    flex: 1,
-    padding: 15,
-    borderWidth: 1,
-    height: 60,
-    borderColor: "#555",
-    borderRadius: 16,
-    color: "#fff",
-    backgroundColor: "#1a1c1b",
-    fontFamily: "Aeonik",
-    fontSize: 16,
-  },
-  sendButton: {
-    paddingTop: 16,
-    borderRadius: 10,
-    position: "absolute",
-    right: 20,
+    color: "#0066cc",
+    textDecorationLine: "underline",
   },
 });
 
